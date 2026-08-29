@@ -13,6 +13,22 @@ type Feedback {
 
 type Query {
   events: [Event!]!
+  feedback(
+    eventId: ID!
+    rating: Int
+    first: Int = 20
+    after: String
+  ): FeedbackConnection!
+}
+
+type FeedbackConnection {
+  items: [Feedback!]!
+  pageInfo: PageInfo!
+}
+
+type PageInfo {
+  endCursor: String
+  hasNextPage: Boolean!
 }
 
 input SubmitFeedbackInput {

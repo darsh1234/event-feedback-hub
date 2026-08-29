@@ -270,6 +270,9 @@ describe('GraphQL API', () => {
       create: () => {
         throw new Error('Simulated database failure')
       },
+      list: () => {
+        throw new Error('Unexpected feedback list call')
+      },
     }
     const failingContext: GraphQLContext = {
       eventRepository: context.eventRepository,

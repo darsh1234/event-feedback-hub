@@ -32,6 +32,12 @@ export type Feedback = {
   text: Scalars['String']['output']
 }
 
+export type FeedbackConnection = {
+  __typename?: 'FeedbackConnection'
+  items: Array<Feedback>
+  pageInfo: PageInfo
+}
+
 export enum FeedbackErrorCode {
   EmptyText = 'EMPTY_TEXT',
   InvalidEvent = 'INVALID_EVENT',
@@ -48,9 +54,23 @@ export type MutationSubmitFeedbackArgs = {
   input: SubmitFeedbackInput
 }
 
+export type PageInfo = {
+  __typename?: 'PageInfo'
+  endCursor?: Maybe<Scalars['String']['output']>
+  hasNextPage: Scalars['Boolean']['output']
+}
+
 export type Query = {
   __typename?: 'Query'
   events: Array<Event>
+  feedback: FeedbackConnection
+}
+
+export type QueryFeedbackArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  eventId: Scalars['ID']['input']
+  first?: InputMaybe<Scalars['Int']['input']>
+  rating?: InputMaybe<Scalars['Int']['input']>
 }
 
 export type SubmitFeedbackInput = {
@@ -197,10 +217,16 @@ export type ResolversTypes = ResolversObject<{
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>
   Event: ResolverTypeWrapper<EventRecord>
   Feedback: ResolverTypeWrapper<FeedbackRecord>
+  FeedbackConnection: ResolverTypeWrapper<
+    Omit<FeedbackConnection, 'items'> & {
+      items: Array<ResolversTypes['Feedback']>
+    }
+  >
   FeedbackErrorCode: FeedbackErrorCode
   ID: ResolverTypeWrapper<Scalars['ID']['output']>
   Int: ResolverTypeWrapper<Scalars['Int']['output']>
   Mutation: ResolverTypeWrapper<Record<PropertyKey, never>>
+  PageInfo: ResolverTypeWrapper<PageInfo>
   Query: ResolverTypeWrapper<Record<PropertyKey, never>>
   String: ResolverTypeWrapper<Scalars['String']['output']>
   SubmitFeedbackInput: SubmitFeedbackInput
@@ -217,9 +243,13 @@ export type ResolversParentTypes = ResolversObject<{
   Boolean: Scalars['Boolean']['output']
   Event: EventRecord
   Feedback: FeedbackRecord
+  FeedbackConnection: Omit<FeedbackConnection, 'items'> & {
+    items: Array<ResolversParentTypes['Feedback']>
+  }
   ID: Scalars['ID']['output']
   Int: Scalars['Int']['output']
   Mutation: Record<PropertyKey, never>
+  PageInfo: PageInfo
   Query: Record<PropertyKey, never>
   String: Scalars['String']['output']
   SubmitFeedbackInput: SubmitFeedbackInput
@@ -250,6 +280,15 @@ export type FeedbackResolvers<
   text?: Resolver<ResolversTypes['String'], ParentType, ContextType>
 }>
 
+export type FeedbackConnectionResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes['FeedbackConnection'] =
+    ResolversParentTypes['FeedbackConnection'],
+> = ResolversObject<{
+  items?: Resolver<Array<ResolversTypes['Feedback']>, ParentType, ContextType>
+  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>
+}>
+
 export type MutationResolvers<
   ContextType = GraphQLContext,
   ParentType extends ResolversParentTypes['Mutation'] =
@@ -263,12 +302,27 @@ export type MutationResolvers<
   >
 }>
 
+export type PageInfoResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes['PageInfo'] =
+    ResolversParentTypes['PageInfo'],
+> = ResolversObject<{
+  endCursor?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>
+  hasNextPage?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>
+}>
+
 export type QueryResolvers<
   ContextType = GraphQLContext,
   ParentType extends ResolversParentTypes['Query'] =
     ResolversParentTypes['Query'],
 > = ResolversObject<{
   events?: Resolver<Array<ResolversTypes['Event']>, ParentType, ContextType>
+  feedback?: Resolver<
+    ResolversTypes['FeedbackConnection'],
+    ParentType,
+    ContextType,
+    RequireFields<QueryFeedbackArgs, 'eventId' | 'first'>
+  >
 }>
 
 export type SubmitFeedbackPayloadResolvers<
@@ -297,7 +351,9 @@ export type UserErrorResolvers<
 export type Resolvers<ContextType = GraphQLContext> = ResolversObject<{
   Event?: EventResolvers<ContextType>
   Feedback?: FeedbackResolvers<ContextType>
+  FeedbackConnection?: FeedbackConnectionResolvers<ContextType>
   Mutation?: MutationResolvers<ContextType>
+  PageInfo?: PageInfoResolvers<ContextType>
   Query?: QueryResolvers<ContextType>
   SubmitFeedbackPayload?: SubmitFeedbackPayloadResolvers<ContextType>
   UserError?: UserErrorResolvers<ContextType>

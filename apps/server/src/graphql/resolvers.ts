@@ -2,7 +2,12 @@ import {
   FeedbackErrorCode,
   type Resolvers,
 } from './generated/resolver-types.js'
-import type { FeedbackSubmissionErrorCode } from '../services/feedbackService.js'
+import { GraphQLError } from 'graphql'
+
+import {
+  FeedbackQueryValidationError,
+  type FeedbackSubmissionErrorCode,
+} from '../services/feedbackService.js'
 
 const graphQLErrorCodes: Record<
   FeedbackSubmissionErrorCode,
@@ -42,5 +47,27 @@ export const resolvers: Resolvers = {
   Query: {
     events: (_parent, _arguments, { eventRepository }) =>
       eventRepository.list(),
+    feedback: (
+      _parent,
+      { eventId, rating, first, after },
+      { feedbackService },
+    ) => {
+      try {
+        return feedbackService.list({
+          eventId,
+          first,
+          ...(rating === null || rating === undefined ? {} : { rating }),
+          ...(after === null || after === undefined ? {} : { after }),
+        })
+      } catch (error) {
+        if (error instanceof FeedbackQueryValidationError) {
+          throw new GraphQLError(error.message, {
+            extensions: { code: 'BAD_USER_INPUT' },
+          })
+        }
+
+        throw error
+      }
+    },
   },
 }

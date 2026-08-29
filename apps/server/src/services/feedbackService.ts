@@ -1,3 +1,8 @@
+import {
+  decodeFeedbackCursor,
+  encodeFeedbackCursor,
+  InvalidFeedbackCursorError,
+} from '../domain/feedbackCursor.js'
 import { createFeedbackId, isEventId } from '../domain/ids.js'
 import type { EventRepository } from '../repositories/eventRepository.js'
 import type {
@@ -32,7 +37,30 @@ export interface SubmitFeedbackResult {
   errors: FeedbackSubmissionError[]
 }
 
+export interface ListFeedbackInput {
+  eventId: string
+  rating?: number
+  first: number
+  after?: string
+}
+
+export interface FeedbackConnection {
+  items: FeedbackRecord[]
+  pageInfo: {
+    endCursor: string | null
+    hasNextPage: boolean
+  }
+}
+
+export class FeedbackQueryValidationError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'FeedbackQueryValidationError'
+  }
+}
+
 export interface FeedbackService {
+  list(input: ListFeedbackInput): FeedbackConnection
   submit(input: SubmitFeedbackInput): SubmitFeedbackResult
 }
 
@@ -46,6 +74,59 @@ export function createFeedbackService(
   { now = Date.now }: FeedbackServiceOptions = {},
 ): FeedbackService {
   return {
+    list: ({ eventId, rating, first, after }) => {
+      if (!isEventId(eventId) || !eventRepository.exists(eventId)) {
+        throw new FeedbackQueryValidationError('Select a valid event.')
+      }
+
+      if (
+        rating !== undefined &&
+        (!Number.isInteger(rating) || rating < 1 || rating > 5)
+      ) {
+        throw new FeedbackQueryValidationError(
+          'Rating must be an integer from 1 through 5.',
+        )
+      }
+
+      if (!Number.isInteger(first) || first < 1 || first > 50) {
+        throw new FeedbackQueryValidationError(
+          'first must be an integer from 1 through 50.',
+        )
+      }
+
+      let afterId: string | undefined
+
+      if (after !== undefined) {
+        try {
+          afterId = decodeFeedbackCursor(after)
+        } catch (error) {
+          if (error instanceof InvalidFeedbackCursorError) {
+            throw new FeedbackQueryValidationError(
+              'after must be a valid feedback cursor.',
+            )
+          }
+
+          throw error
+        }
+      }
+
+      const page = feedbackRepository.list({
+        eventId,
+        first,
+        ...(rating === undefined ? {} : { rating }),
+        ...(afterId === undefined ? {} : { afterId }),
+      })
+      const lastItem = page.items.at(-1)
+
+      return {
+        items: page.items,
+        pageInfo: {
+          endCursor:
+            lastItem === undefined ? null : encodeFeedbackCursor(lastItem.id),
+          hasNextPage: page.hasNextPage,
+        },
+      }
+    },
     submit: ({ eventId, text, rating }) => {
       const trimmedText = text.trim()
       const errors: FeedbackSubmissionError[] = []

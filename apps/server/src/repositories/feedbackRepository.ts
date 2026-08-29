@@ -16,8 +16,21 @@ export interface CreateFeedbackRecord {
   createdAt: string
 }
 
+export interface ListFeedbackRecordsInput {
+  eventId: string
+  rating?: number
+  first: number
+  afterId?: string
+}
+
+export interface FeedbackRecordPage {
+  items: FeedbackRecord[]
+  hasNextPage: boolean
+}
+
 export interface FeedbackRepository {
   create(input: CreateFeedbackRecord): FeedbackRecord
+  list(input: ListFeedbackRecordsInput): FeedbackRecordPage
 }
 
 export function createFeedbackRepository(
@@ -38,6 +51,71 @@ export function createFeedbackRepository(
         created_at AS createdAt
     `,
   )
+  const listByEvent = database.prepare<[string, number], FeedbackRecord>(
+    `
+      SELECT
+        id,
+        event_id AS eventId,
+        text,
+        rating,
+        created_at AS createdAt
+      FROM feedback
+      WHERE event_id = ?
+      ORDER BY id DESC
+      LIMIT ?
+    `,
+  )
+  const listByEventAfter = database.prepare<
+    [string, string, number],
+    FeedbackRecord
+  >(
+    `
+      SELECT
+        id,
+        event_id AS eventId,
+        text,
+        rating,
+        created_at AS createdAt
+      FROM feedback
+      WHERE event_id = ? AND id < ?
+      ORDER BY id DESC
+      LIMIT ?
+    `,
+  )
+  const listByEventAndRating = database.prepare<
+    [string, number, number],
+    FeedbackRecord
+  >(
+    `
+      SELECT
+        id,
+        event_id AS eventId,
+        text,
+        rating,
+        created_at AS createdAt
+      FROM feedback
+      WHERE event_id = ? AND rating = ?
+      ORDER BY id DESC
+      LIMIT ?
+    `,
+  )
+  const listByEventAndRatingAfter = database.prepare<
+    [string, number, string, number],
+    FeedbackRecord
+  >(
+    `
+      SELECT
+        id,
+        event_id AS eventId,
+        text,
+        rating,
+        created_at AS createdAt
+      FROM feedback
+      WHERE event_id = ? AND rating = ? AND id < ?
+      ORDER BY id DESC
+      LIMIT ?
+    `,
+  )
 
   return {
     create: ({ id, eventId, text, rating, createdAt }) => {
@@ -48,6 +126,25 @@ export function createFeedbackRepository(
       }
 
       return feedback
+    },
+    list: ({ eventId, rating, first, afterId }) => {
+      const limit = first + 1
+      let rows: FeedbackRecord[]
+
+      if (rating !== undefined && afterId !== undefined) {
+        rows = listByEventAndRatingAfter.all(eventId, rating, afterId, limit)
+      } else if (rating !== undefined) {
+        rows = listByEventAndRating.all(eventId, rating, limit)
+      } else if (afterId !== undefined) {
+        rows = listByEventAfter.all(eventId, afterId, limit)
+      } else {
+        rows = listByEvent.all(eventId, limit)
+      }
+
+      return {
+        items: rows.slice(0, first),
+        hasNextPage: rows.length > first,
+      }
     },
   }
 }

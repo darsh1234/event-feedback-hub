@@ -266,6 +266,8 @@ Expected validation failures are not used to hide unexpected repository failures
 
 Feedback is ordered by `id DESC`. The logical cursor contains only the last feedback ID in the returned page and remains opaque to the client.
 
+The transport cursor is the canonical unpadded base64url encoding of that feedback ID. Decoding must reproduce the same canonical cursor and yield a valid `F-{ULID}`; padded, malformed, event-prefixed, and otherwise noncanonical values are rejected with `BAD_USER_INPUT`. Clients treat the encoded value as an uninterpreted token.
+
 - Initial page: query the selected event in descending ID order.
 - Next page: add `id < :afterId`.
 - Rating filter: add `rating = :rating`.
