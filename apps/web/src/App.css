@@ -346,7 +346,8 @@ h2 {
 
 .rating-filter button,
 .stream-state button,
-.load-older-button {
+.load-older-button,
+.new-feedback-button {
   min-height: 2.5rem;
   padding: 0 0.75rem;
   border: 1px solid #aeb9c8;
@@ -367,9 +368,35 @@ h2 {
 
 .rating-filter button:focus-visible,
 .stream-state button:focus-visible,
-.load-older-button:focus-visible {
+.load-older-button:focus-visible,
+.new-feedback-button:focus-visible,
+.feedback-scroll-region:focus-visible {
   outline: 3px solid rgb(42 103 190 / 30%);
   outline-offset: 2px;
+}
+
+.new-feedback-button {
+  display: block;
+  margin: 1.5rem auto 0;
+  border-color: #245da8;
+  color: #ffffff;
+  background: #245da8;
+}
+
+.feedback-scroll-region {
+  max-height: 36rem;
+  padding: 0 0.25rem 0.25rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.new-feedback-button + .feedback-scroll-region {
+  margin-top: 1rem;
+}
+
+.new-feedback-button + .feedback-scroll-region > :first-child {
+  margin-top: 0;
 }
 
 .feedback-loading,

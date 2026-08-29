@@ -1,5 +1,15 @@
-import type { FieldPolicy } from '@apollo/client/cache'
+import type { ApolloCache, FieldPolicy } from '@apollo/client/cache'
 import type { Reference, StoreObject } from '@apollo/client/utilities'
+
+import {
+  FeedbackDocument,
+  type FeedbackQuery,
+  type FeedbackQueryVariables,
+} from '../graphql/generated/graphql'
+
+export type FeedbackListItem = FeedbackQuery['feedback']['items'][number]
+
+export const feedbackPageSize = 20
 
 type CachedFeedbackItem = Reference | StoreObject
 
@@ -56,4 +66,49 @@ export const feedbackFieldPolicy: FieldPolicy<
       items,
     }
   },
+}
+
+export function prependFeedbackToCache(
+  cache: ApolloCache,
+  feedback: FeedbackListItem,
+  eventId: string,
+  rating: number | null,
+) {
+  if (
+    feedback.event.id !== eventId ||
+    (rating !== null && feedback.rating !== rating)
+  ) {
+    return false
+  }
+
+  const variables: FeedbackQueryVariables = {
+    eventId,
+    first: feedbackPageSize,
+    ...(rating === null ? {} : { rating }),
+  }
+  const data = cache.readQuery<FeedbackQuery, FeedbackQueryVariables>({
+    query: FeedbackDocument,
+    variables,
+  })
+
+  if (data === null) {
+    return false
+  }
+
+  if (data.feedback.items.some(({ id }) => id === feedback.id)) {
+    return true
+  }
+
+  cache.writeQuery<FeedbackQuery, FeedbackQueryVariables>({
+    query: FeedbackDocument,
+    variables,
+    data: {
+      feedback: {
+        ...data.feedback,
+        items: [feedback, ...data.feedback.items],
+      },
+    },
+  })
+
+  return true
 }

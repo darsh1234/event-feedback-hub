@@ -1,0 +1,14 @@
+subscription FeedbackAdded($eventId: ID!) {
+  feedbackAdded(eventId: $eventId) {
+    __typename
+    id
+    event {
+      __typename
+      id
+      name
+    }
+    text
+    rating
+    createdAt
+  }
+}

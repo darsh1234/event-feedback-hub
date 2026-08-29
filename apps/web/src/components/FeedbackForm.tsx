@@ -1,10 +1,12 @@
 import { useMutation } from '@apollo/client/react'
 import { type FormEvent, useState } from 'react'
 
+import type { FeedbackListItem } from '../apollo/feedbackCache'
 import { SubmitFeedbackDocument } from '../graphql/generated/graphql'
 
 interface FeedbackFormProps {
   eventId: string
+  onSubmitted?: (feedback: FeedbackListItem) => void
 }
 
 type FeedbackField = 'rating' | 'text'
@@ -30,7 +32,7 @@ function validateFeedback(text: string, rating: number | null): FieldErrors {
   return errors
 }
 
-export function FeedbackForm({ eventId }: FeedbackFormProps) {
+export function FeedbackForm({ eventId, onSubmitted }: FeedbackFormProps) {
   const [text, setText] = useState('')
   const [rating, setRating] = useState<number | null>(null)
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
@@ -98,6 +100,7 @@ export function FeedbackForm({ eventId }: FeedbackFormProps) {
       setRating(null)
       setFieldErrors({})
       setSuccessMessage('Thanks—your feedback was submitted.')
+      onSubmitted?.(payload.feedback)
     } catch {
       setFormError("We couldn't submit your feedback. Please try again.")
     }

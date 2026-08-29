@@ -2,6 +2,7 @@ import type { MockedResponse } from '@apollo/client/testing'
 import { MockedProvider } from '@apollo/client/testing/react'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { useState } from 'react'
 import { describe, expect, it } from 'vitest'
 
 import { createApolloCache } from '../apollo/client'
@@ -80,9 +81,24 @@ function feedbackMock({
 function renderStream(
   mocks: MockedResponse<FeedbackQuery, FeedbackQueryVariables>[],
 ) {
+  function StreamHarness() {
+    const [rating, setRating] = useState<number | null>(null)
+
+    return (
+      <FeedbackStream
+        bufferedFeedbackCount={0}
+        eventId={eventId}
+        onAtTopChange={() => undefined}
+        onRatingChange={setRating}
+        onRevealBufferedFeedback={() => undefined}
+        rating={rating}
+      />
+    )
+  }
+
   render(
     <MockedProvider cache={createApolloCache()} mocks={mocks}>
-      <FeedbackStream eventId={eventId} />
+      <StreamHarness />
     </MockedProvider>,
   )
 }

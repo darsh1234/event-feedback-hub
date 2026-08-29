@@ -50,11 +50,12 @@ export type SubmitFeedbackMutationVariables = Exact<{
 export type SubmitFeedbackMutation = {
   submitFeedback: {
     feedback: {
+      __typename: 'Feedback'
       id: string
       text: string
       rating: number
       createdAt: string
-      event: { id: string; name: string }
+      event: { __typename: 'Event'; id: string; name: string }
     } | null
     errors: Array<{
       field: string | null
@@ -67,6 +68,21 @@ export type SubmitFeedbackMutation = {
 export type EventsQueryVariables = Exact<{ [key: string]: never }>
 
 export type EventsQuery = { events: Array<{ id: string; name: string }> }
+
+export type FeedbackAddedSubscriptionVariables = Exact<{
+  eventId: string | number
+}>
+
+export type FeedbackAddedSubscription = {
+  feedbackAdded: {
+    __typename: 'Feedback'
+    id: string
+    text: string
+    rating: number
+    createdAt: string
+    event: { __typename: 'Event'; id: string; name: string }
+  }
+}
 
 export const FeedbackDocument = {
   kind: 'Document',
@@ -280,6 +296,10 @@ export const SubmitFeedbackDocument = {
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: '__typename' },
+                      },
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       {
                         kind: 'Field',
@@ -287,6 +307,10 @@ export const SubmitFeedbackDocument = {
                         selectionSet: {
                           kind: 'SelectionSet',
                           selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: '__typename' },
+                            },
                             {
                               kind: 'Field',
                               name: { kind: 'Name', value: 'id' },
@@ -362,3 +386,73 @@ export const EventsDocument = {
     },
   ],
 } as unknown as DocumentNode<EventsQuery, EventsQueryVariables>
+export const FeedbackAddedDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'subscription',
+      name: { kind: 'Name', value: 'FeedbackAdded' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'eventId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'feedbackAdded' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'eventId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'eventId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'event' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: '__typename' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'text' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'rating' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  FeedbackAddedSubscription,
+  FeedbackAddedSubscriptionVariables
+>

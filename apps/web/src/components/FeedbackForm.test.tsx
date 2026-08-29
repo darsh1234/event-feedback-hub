@@ -106,8 +106,13 @@ describe('FeedbackForm', () => {
         {
           submitFeedback: {
             feedback: {
+              __typename: 'Feedback',
               id: 'F-01M17J0000000000000000000',
-              event: { id: eventId, name: 'Document Intelligence Workshop' },
+              event: {
+                __typename: 'Event',
+                id: eventId,
+                name: 'Document Intelligence Workshop',
+              },
               text: feedbackText,
               rating: 5,
               createdAt: '2026-08-29T20:00:00.000Z',

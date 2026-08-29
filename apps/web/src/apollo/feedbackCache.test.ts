@@ -7,6 +7,7 @@ import {
   type FeedbackQueryVariables,
 } from '../graphql/generated/graphql'
 import { createApolloCache } from './client'
+import { prependFeedbackToCache } from './feedbackCache'
 
 type FeedbackItem = FeedbackQuery['feedback']['items'][number]
 
@@ -79,6 +80,55 @@ describe('feedback field policy', () => {
       newer.id,
     ])
     expect(readPage(cache, variables)?.pageInfo.endCursor).toBe('cursor-newer')
+  })
+
+  it('prepends live feedback once without changing the oldest-page cursor', () => {
+    const cache = createApolloCache()
+    const variables = { eventId: workshopId, first: 20 }
+    const persisted = feedbackItem('F-persisted', 4)
+    const live = feedbackItem('F-live', 5)
+
+    writePage(cache, variables, [persisted], 'cursor-oldest', true)
+
+    expect(prependFeedbackToCache(cache, live, workshopId, null)).toBe(true)
+    expect(prependFeedbackToCache(cache, live, workshopId, null)).toBe(true)
+
+    expect(readPage(cache, variables)?.items.map(({ id }) => id)).toEqual([
+      live.id,
+      persisted.id,
+    ])
+    expect(readPage(cache, variables)?.pageInfo).toEqual({
+      __typename: 'PageInfo',
+      endCursor: 'cursor-oldest',
+      hasNextPage: true,
+    })
+  })
+
+  it('does not merge live feedback into a different event or rating list', () => {
+    const cache = createApolloCache()
+    const variables = { eventId: workshopId, first: 20, rating: 5 }
+    const persisted = feedbackItem('F-persisted', 5)
+
+    writePage(cache, variables, [persisted], null, false)
+
+    expect(
+      prependFeedbackToCache(cache, feedbackItem('F-three', 3), workshopId, 5),
+    ).toBe(false)
+    expect(
+      prependFeedbackToCache(
+        cache,
+        feedbackItem('F-webinar', 5, {
+          id: webinarId,
+          name: 'Insurance Automation Webinar',
+        }),
+        workshopId,
+        5,
+      ),
+    ).toBe(false)
+
+    expect(readPage(cache, variables)?.items.map(({ id }) => id)).toEqual([
+      persisted.id,
+    ])
   })
 
   it('appends an older page, deduplicates IDs, and advances the cursor', () => {

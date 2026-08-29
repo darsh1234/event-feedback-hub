@@ -1,15 +1,20 @@
 import { NetworkStatus } from '@apollo/client'
 import { useQuery } from '@apollo/client/react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
+import { feedbackPageSize } from '../apollo/feedbackCache'
 import { FeedbackDocument } from '../graphql/generated/graphql'
 import { formatAbsoluteTime, formatRelativeTime } from '../utils/relativeTime'
 
 interface FeedbackStreamProps {
+  bufferedFeedbackCount: number
   eventId: string
+  onAtTopChange: (isAtTop: boolean) => void
+  onRatingChange: (rating: number | null) => void
+  onRevealBufferedFeedback: () => void
+  rating: number | null
 }
 
-const pageSize = 20
 const ratings = [1, 2, 3, 4, 5] as const
 
 function RatingFilter({
@@ -74,13 +79,20 @@ function FeedbackRating({ rating }: { rating: number }) {
   )
 }
 
-export function FeedbackStream({ eventId }: FeedbackStreamProps) {
-  const [rating, setRating] = useState<number | null>(null)
+export function FeedbackStream({
+  bufferedFeedbackCount,
+  eventId,
+  onAtTopChange,
+  onRatingChange,
+  onRevealBufferedFeedback,
+  rating,
+}: FeedbackStreamProps) {
   const [paginationError, setPaginationError] = useState('')
   const [now, setNow] = useState(() => Date.now())
+  const scrollRegionRef = useRef<HTMLDivElement>(null)
   const variables = {
     eventId,
-    first: pageSize,
+    first: feedbackPageSize,
     ...(rating === null ? {} : { rating }),
   }
   const { data, error, fetchMore, loading, networkStatus, refetch } = useQuery(
@@ -98,9 +110,17 @@ export function FeedbackStream({ eventId }: FeedbackStreamProps) {
     return () => window.clearInterval(intervalId)
   }, [])
 
+  useEffect(() => {
+    if (scrollRegionRef.current !== null) {
+      scrollRegionRef.current.scrollTop = 0
+    }
+
+    onAtTopChange(true)
+  }, [eventId, onAtTopChange, rating])
+
   function changeRating(nextRating: number | null) {
     setPaginationError('')
-    setRating(nextRating)
+    onRatingChange(nextRating)
   }
 
   async function loadOlderFeedback() {
@@ -126,6 +146,16 @@ export function FeedbackStream({ eventId }: FeedbackStreamProps) {
     }
   }
 
+  function revealBufferedFeedback() {
+    onRevealBufferedFeedback()
+
+    if (scrollRegionRef.current !== null) {
+      scrollRegionRef.current.scrollTop = 0
+    }
+
+    onAtTopChange(true)
+  }
+
   const isInitialLoading = loading && data === undefined
   const isLoadingOlder = networkStatus === NetworkStatus.fetchMore
 
@@ -139,58 +169,80 @@ export function FeedbackStream({ eventId }: FeedbackStreamProps) {
         <RatingFilter rating={rating} setRating={changeRating} />
       </div>
 
-      {isInitialLoading ? <FeedbackLoadingState /> : null}
-
-      {data === undefined && error !== undefined ? (
-        <div className="stream-state stream-state-error">
-          <p role="alert">We couldn&apos;t load feedback for this event.</p>
-          <button type="button" onClick={() => void refetch()}>
-            Retry
-          </button>
-        </div>
+      {bufferedFeedbackCount > 0 ? (
+        <button
+          className="new-feedback-button"
+          onClick={revealBufferedFeedback}
+          type="button"
+        >
+          {bufferedFeedbackCount}{' '}
+          {bufferedFeedbackCount === 1 ? 'new response' : 'new responses'}
+        </button>
       ) : null}
 
-      {data?.feedback.items.length === 0 ? (
-        <div className="stream-state">
-          {rating === null ? (
-            <p>No feedback yet. Be the first to share a response.</p>
-          ) : (
-            <>
-              <p>
-                No {rating}-star feedback yet. Try another rating or show all
-                feedback.
-              </p>
-              <button type="button" onClick={() => changeRating(null)}>
-                Show all feedback
-              </button>
-            </>
-          )}
-        </div>
-      ) : null}
+      <div
+        aria-label="Feedback responses"
+        className="feedback-scroll-region"
+        onScroll={(event) => onAtTopChange(event.currentTarget.scrollTop <= 8)}
+        ref={scrollRegionRef}
+        role="region"
+        tabIndex={0}
+      >
+        {isInitialLoading ? <FeedbackLoadingState /> : null}
 
-      {data !== undefined && data.feedback.items.length > 0 ? (
-        <ul className="feedback-list">
-          {data.feedback.items.map((feedback) => (
-            <li key={feedback.id}>
-              <article className="feedback-card">
-                <header>
-                  <div>
-                    <p className="feedback-event-name">{feedback.event.name}</p>
-                    <FeedbackRating rating={feedback.rating} />
-                  </div>
-                  <time
-                    dateTime={feedback.createdAt}
-                    title={formatAbsoluteTime(feedback.createdAt)}
-                  >
-                    {formatRelativeTime(feedback.createdAt, now)}
-                  </time>
-                </header>
-                <p>{feedback.text}</p>
-              </article>
-            </li>
-          ))}
-        </ul>
-      ) : null}
+        {data === undefined && error !== undefined ? (
+          <div className="stream-state stream-state-error">
+            <p role="alert">We couldn&apos;t load feedback for this event.</p>
+            <button type="button" onClick={() => void refetch()}>
+              Retry
+            </button>
+          </div>
+        ) : null}
+
+        {data?.feedback.items.length === 0 ? (
+          <div className="stream-state">
+            {rating === null ? (
+              <p>No feedback yet. Be the first to share a response.</p>
+            ) : (
+              <>
+                <p>
+                  No {rating}-star feedback yet. Try another rating or show all
+                  feedback.
+                </p>
+                <button type="button" onClick={() => changeRating(null)}>
+                  Show all feedback
+                </button>
+              </>
+            )}
+          </div>
+        ) : null}
+
+        {data !== undefined && data.feedback.items.length > 0 ? (
+          <ul className="feedback-list">
+            {data.feedback.items.map((feedback) => (
+              <li key={feedback.id}>
+                <article className="feedback-card">
+                  <header>
+                    <div>
+                      <p className="feedback-event-name">
+                        {feedback.event.name}
+                      </p>
+                      <FeedbackRating rating={feedback.rating} />
+                    </div>
+                    <time
+                      dateTime={feedback.createdAt}
+                      title={formatAbsoluteTime(feedback.createdAt)}
+                    >
+                      {formatRelativeTime(feedback.createdAt, now)}
+                    </time>
+                  </header>
+                  <p>{feedback.text}</p>
+                </article>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </div>
 
       {paginationError.length === 0 ? null : (
         <p className="pagination-error" role="alert">

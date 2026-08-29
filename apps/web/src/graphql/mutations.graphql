@@ -1,8 +1,10 @@
 mutation SubmitFeedback($input: SubmitFeedbackInput!) {
   submitFeedback(input: $input) {
     feedback {
+      __typename
       id
       event {
+        __typename
         id
         name
       }

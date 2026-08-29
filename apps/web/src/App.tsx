@@ -2,8 +2,7 @@ import { useState } from 'react'
 
 import './App.css'
 import { EventSelector } from './components/EventSelector'
-import { FeedbackForm } from './components/FeedbackForm'
-import { FeedbackStream } from './components/FeedbackStream'
+import { EventFeedbackExperience } from './components/EventFeedbackExperience'
 
 function App() {
   const [selectedEventId, setSelectedEventId] = useState('')
@@ -30,10 +29,10 @@ function App() {
       </section>
 
       {selectedEventId.length === 0 ? null : (
-        <>
-          <FeedbackForm eventId={selectedEventId} />
-          <FeedbackStream key={selectedEventId} eventId={selectedEventId} />
-        </>
+        <EventFeedbackExperience
+          key={selectedEventId}
+          eventId={selectedEventId}
+        />
       )}
     </main>
   )
