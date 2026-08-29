@@ -2,7 +2,7 @@
 
 A local TypeScript application for collecting anonymous event feedback and displaying new responses in real time.
 
-The repository is being developed as a sequence of focused, passing checkpoints. The current checkpoint adds reproducible SQLite storage to the typed workspace; GraphQL and product functionality follow in later checkpoints.
+The repository is being developed as a sequence of focused, passing checkpoints. The current checkpoint exposes the seeded events through a typed GraphQL query backed by SQLite.
 
 ## Prerequisites
 
@@ -37,7 +37,24 @@ Then run the web and server workspaces together:
 npm run dev
 ```
 
-The baseline web application uses Vite's default development port. The baseline server exposes `GET /health` on port `4000`.
+The web application uses Vite's default development port. The server exposes `GET /health` and `POST /graphql` on port `4000`.
+
+The current GraphQL capability can be exercised at `http://localhost:4000/graphql` with:
+
+```graphql
+query Events {
+  events {
+    id
+    name
+  }
+}
+```
+
+GraphQL resolver signatures are generated from the committed SDL:
+
+```bash
+npm run codegen
+```
 
 ## Verification
 
@@ -45,7 +62,7 @@ The baseline web application uses Vite's default development port. The baseline 
 npm run verify
 ```
 
-The verification gate checks formatting, linting, TypeScript, tests, and production builds. The same command runs in GitHub Actions.
+The verification gate regenerates GraphQL types, then checks formatting, linting, TypeScript, tests, and production builds. The same command runs in GitHub Actions.
 
 Focused commands are also available:
 
@@ -54,6 +71,7 @@ npm run format
 npm run format:check
 npm run lint
 npm run lint:fix
+npm run codegen
 npm run typecheck
 npm run test
 npm run build

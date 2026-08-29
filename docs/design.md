@@ -75,6 +75,8 @@ Accessibility is verified through semantic markup and React Testing Library asse
 
 npm's install-script allowlist approves `esbuild`, whose platform binary is required by Vite, and `better-sqlite3`, whose native binding is required for SQLite access. The optional macOS `fsevents` script is explicitly denied; Vite can use its cross-platform file-watching fallback. This reduces unnecessary package-install execution while preserving reproducible frontend and database builds.
 
+Apollo's transitive `@apollo/protobufjs` postinstall is also explicitly denied. Its script only creates an optional CLI dependency directory and prints version-scheme guidance; the application does not use its Protocol Buffer CLI, so running the script is unnecessary for GraphQL server behavior.
+
 ## Repository boundaries
 
 ```text
@@ -85,6 +87,7 @@ event-feedback-hub/
 ├── docs/
 │   └── design.md
 ├── AGENTS.md
+├── codegen.yml
 ├── package.json
 ├── tsconfig.base.json
 └── README.md
@@ -94,6 +97,8 @@ event-feedback-hub/
 - `apps/server` owns GraphQL, WebSockets, backend validation, publish/subscribe, repositories, database setup, and SQLite access.
 - The GraphQL schema is the API source of truth.
 - Generated operation and resolver types replace manually duplicated shared API interfaces.
+
+`npm run codegen` reads the local SDL and regenerates committed server resolver signatures without requiring a running API. Verification runs code generation before static checks. Generated files are formatted automatically and excluded from ESLint because they are tool-owned output rather than handwritten source.
 
 ## Reproducible database setup
 

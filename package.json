@@ -14,17 +14,21 @@
   "scripts": {
     "dev": "concurrently --kill-others-on-fail --names server,web \"npm run dev --workspace @event-feedback-hub/server\" \"npm run dev --workspace @event-feedback-hub/web\"",
     "setup": "npm run setup --workspace @event-feedback-hub/server",
-    "build": "npm run build --workspaces --if-present",
-    "typecheck": "npm run typecheck --workspaces --if-present",
+    "codegen": "graphql-codegen --config codegen.yml",
+    "build": "npm run codegen && npm run build --workspaces --if-present",
+    "typecheck": "npm run codegen && npm run typecheck --workspaces --if-present",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "test": "npm run test --workspaces --if-present",
-    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run build"
+    "verify": "npm run codegen && npm run format:check && npm run lint && npm run typecheck --workspaces --if-present && npm run test && npm run build --workspaces --if-present"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@graphql-codegen/cli": "^7.3.1",
+    "@graphql-codegen/typescript": "^6.1.0",
+    "@graphql-codegen/typescript-resolvers": "^6.1.0",
     "@types/node": "^24.13.3",
     "concurrently": "^10.0.5",
     "eslint": "^10.9.1",
@@ -40,6 +44,7 @@
   "allowScripts": {
     "esbuild@0.28.2": true,
     "fsevents": false,
-    "better-sqlite3@13.0.3": true
+    "better-sqlite3@13.0.3": true,
+    "@apollo/protobufjs": false
   }
 }
