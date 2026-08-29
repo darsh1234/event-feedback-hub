@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 
 import App from './App'
-import { EventsDocument } from './graphql/generated/graphql'
+import { EventsDocument, FeedbackDocument } from './graphql/generated/graphql'
 
 describe('application', () => {
   it('introduces the feedback hub and loads the event selection control', async () => {
@@ -42,6 +42,25 @@ describe('application', () => {
           {
             request: { query: EventsDocument },
             result: { data: { events: [event] } },
+          },
+          {
+            request: {
+              query: FeedbackDocument,
+              variables: { eventId: event.id, first: 20 },
+            },
+            result: {
+              data: {
+                feedback: {
+                  __typename: 'FeedbackConnection',
+                  items: [],
+                  pageInfo: {
+                    __typename: 'PageInfo',
+                    endCursor: null,
+                    hasNextPage: false,
+                  },
+                },
+              },
+            },
           },
         ]}
       >

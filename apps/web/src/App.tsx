@@ -3,6 +3,7 @@ import { useState } from 'react'
 import './App.css'
 import { EventSelector } from './components/EventSelector'
 import { FeedbackForm } from './components/FeedbackForm'
+import { FeedbackStream } from './components/FeedbackStream'
 
 function App() {
   const [selectedEventId, setSelectedEventId] = useState('')
@@ -29,7 +30,10 @@ function App() {
       </section>
 
       {selectedEventId.length === 0 ? null : (
-        <FeedbackForm eventId={selectedEventId} />
+        <>
+          <FeedbackForm eventId={selectedEventId} />
+          <FeedbackStream key={selectedEventId} eventId={selectedEventId} />
+        </>
       )}
     </main>
   )

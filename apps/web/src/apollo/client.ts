@@ -4,6 +4,8 @@ import { getMainDefinition } from '@apollo/client/utilities'
 import { Kind, OperationTypeNode } from 'graphql'
 import { createClient } from 'graphql-ws'
 
+import { feedbackFieldPolicy } from './feedbackCache'
+
 const graphQLHttpUrl = 'http://localhost:4000/graphql'
 const graphQLWebSocketUrl = 'ws://localhost:4000/graphql'
 
@@ -28,7 +30,19 @@ const link = split(
   httpLink,
 )
 
+export function createApolloCache() {
+  return new InMemoryCache({
+    typePolicies: {
+      Query: {
+        fields: {
+          feedback: feedbackFieldPolicy,
+        },
+      },
+    },
+  })
+}
+
 export const apolloClient = new ApolloClient({
-  cache: new InMemoryCache(),
+  cache: createApolloCache(),
   link,
 })

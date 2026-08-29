@@ -14,10 +14,13 @@ import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-
  * Learn more about it here: https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#reducing-bundle-size
  */
 type Documents = {
+  'query Feedback($eventId: ID!, $rating: Int, $first: Int!, $after: String) {\n  feedback(eventId: $eventId, rating: $rating, first: $first, after: $after) {\n    __typename\n    items {\n      __typename\n      id\n      event {\n        __typename\n        id\n        name\n      }\n      text\n      rating\n      createdAt\n    }\n    pageInfo {\n      __typename\n      endCursor\n      hasNextPage\n    }\n  }\n}': typeof types.FeedbackDocument
   'mutation SubmitFeedback($input: SubmitFeedbackInput!) {\n  submitFeedback(input: $input) {\n    feedback {\n      id\n      event {\n        id\n        name\n      }\n      text\n      rating\n      createdAt\n    }\n    errors {\n      field\n      code\n      message\n    }\n  }\n}': typeof types.SubmitFeedbackDocument
   'query Events {\n  events {\n    id\n    name\n  }\n}': typeof types.EventsDocument
 }
 const documents: Documents = {
+  'query Feedback($eventId: ID!, $rating: Int, $first: Int!, $after: String) {\n  feedback(eventId: $eventId, rating: $rating, first: $first, after: $after) {\n    __typename\n    items {\n      __typename\n      id\n      event {\n        __typename\n        id\n        name\n      }\n      text\n      rating\n      createdAt\n    }\n    pageInfo {\n      __typename\n      endCursor\n      hasNextPage\n    }\n  }\n}':
+    types.FeedbackDocument,
   'mutation SubmitFeedback($input: SubmitFeedbackInput!) {\n  submitFeedback(input: $input) {\n    feedback {\n      id\n      event {\n        id\n        name\n      }\n      text\n      rating\n      createdAt\n    }\n    errors {\n      field\n      code\n      message\n    }\n  }\n}':
     types.SubmitFeedbackDocument,
   'query Events {\n  events {\n    id\n    name\n  }\n}': types.EventsDocument,
@@ -37,6 +40,12 @@ const documents: Documents = {
  */
 export function graphql(source: string): unknown
 
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: 'query Feedback($eventId: ID!, $rating: Int, $first: Int!, $after: String) {\n  feedback(eventId: $eventId, rating: $rating, first: $first, after: $after) {\n    __typename\n    items {\n      __typename\n      id\n      event {\n        __typename\n        id\n        name\n      }\n      text\n      rating\n      createdAt\n    }\n    pageInfo {\n      __typename\n      endCursor\n      hasNextPage\n    }\n  }\n}',
+): (typeof documents)['query Feedback($eventId: ID!, $rating: Int, $first: Int!, $after: String) {\n  feedback(eventId: $eventId, rating: $rating, first: $first, after: $after) {\n    __typename\n    items {\n      __typename\n      id\n      event {\n        __typename\n        id\n        name\n      }\n      text\n      rating\n      createdAt\n    }\n    pageInfo {\n      __typename\n      endCursor\n      hasNextPage\n    }\n  }\n}']
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

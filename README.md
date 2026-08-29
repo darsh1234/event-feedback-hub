@@ -2,7 +2,7 @@
 
 A local TypeScript application for collecting anonymous event feedback and displaying new responses in real time.
 
-The repository is being developed as a sequence of focused, passing checkpoints. The current checkpoint adds an anonymous feedback form with accessible rating controls, helpful client validation, and field-specific server validation messages. The backend exposes validated submissions, filtered cursor pagination, and event-scoped live updates backed by SQLite.
+The repository is being developed as a sequence of focused, passing checkpoints. The current checkpoint adds persisted feedback browsing with rating filters, relative submission times, and explicit cursor pagination. The backend exposes validated submissions, filtered cursor pagination, and event-scoped live updates backed by SQLite.
 
 ## Prerequisites
 
@@ -39,7 +39,7 @@ npm run dev
 
 The web application uses Vite's default development port. The server exposes `GET /health`, GraphQL over HTTP, and GraphQL subscriptions over WebSocket on port `4000`. Both GraphQL transports use the `/graphql` path.
 
-The React application sends queries and mutations to `http://localhost:4000/graphql` and uses a lazy `graphql-ws` connection at `ws://localhost:4000/graphql` for future subscription operations. Its event selector is populated by the generated, typed `Events` operation rather than hardcoded client data. After an event is selected, the feedback form validates text and rating locally before using the typed `SubmitFeedback` mutation. Expected server validation errors remain beside the relevant field, input is preserved after failure, and the form clears only after a confirmed success.
+The React application sends queries and mutations to `http://localhost:4000/graphql` and uses a lazy `graphql-ws` connection at `ws://localhost:4000/graphql` for future subscription operations. Its event selector is populated by the generated, typed `Events` operation rather than hardcoded client data. After an event is selected, the feedback form validates text and rating locally before using the typed `SubmitFeedback` mutation. Expected server validation errors remain beside the relevant field, input is preserved after failure, and the form clears only after a confirmed success. The persisted stream uses a typed feedback query with `cache-and-network`, keeps separate Apollo lists for each event and rating, and appends deduplicated older pages through the opaque server cursor.
 
 The current GraphQL capability can be exercised at `http://localhost:4000/graphql` with:
 

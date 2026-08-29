@@ -1,0 +1,22 @@
+query Feedback($eventId: ID!, $rating: Int, $first: Int!, $after: String) {
+  feedback(eventId: $eventId, rating: $rating, first: $first, after: $after) {
+    __typename
+    items {
+      __typename
+      id
+      event {
+        __typename
+        id
+        name
+      }
+      text
+      rating
+      createdAt
+    }
+    pageInfo {
+      __typename
+      endCursor
+      hasNextPage
+    }
+  }
+}
