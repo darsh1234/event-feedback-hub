@@ -15,7 +15,7 @@ This document records the intended architecture, the reasoning behind it, and th
 - Users are anonymous; there are no accounts, authentication, profiles, or user records.
 - Events are predefined, seeded, and read-only.
 - Feedback is append-only; editing and deletion are outside scope.
-- The product does not display a semantic submission timestamp.
+- Feedback displays its server-recorded submission time.
 
 Anonymous submissions mean the application cannot enforce one response per human. Duplicate submissions are possible and accepted for this scope.
 
@@ -67,13 +67,13 @@ Apollo Client directly supports the chosen queries, mutations, pagination, cache
 - `.editorconfig` for basic editor consistency
 - Vitest, React Testing Library, Apollo Server integration tests, and Playwright
 - GitHub Actions running the same `npm run verify` gate used locally
-- npm install scripts denied by default, with only Vite's `esbuild` binary setup explicitly approved
+- npm install scripts denied by default, with only the required `esbuild` and `better-sqlite3` native setup explicitly approved
 
 ESLint owns correctness-oriented static analysis and Prettier owns formatting. The repository intentionally avoids Husky and `lint-staged`; explicit root commands and CI provide the quality gate without installing hooks on a reviewer's machine.
 
 Accessibility is verified through semantic markup and React Testing Library assertions against the rendered interface. The JSX accessibility lint plugin is intentionally omitted because its current release does not support ESLint 10; retaining the current linter and testing actual component behavior is more defensible than forcing an outdated peer dependency.
 
-npm's install-script allowlist approves only `esbuild`, whose platform binary is required by Vite. The optional macOS `fsevents` script is explicitly denied; Vite can use its cross-platform file-watching fallback. This reduces unnecessary package-install execution while preserving a reproducible frontend build.
+npm's install-script allowlist approves `esbuild`, whose platform binary is required by Vite, and `better-sqlite3`, whose native binding is required for SQLite access. The optional macOS `fsevents` script is explicitly denied; Vite can use its cross-platform file-watching fallback. This reduces unnecessary package-install execution while preserving reproducible frontend and database builds.
 
 ## Repository boundaries
 
@@ -104,6 +104,8 @@ The repository commits:
 - a setup command that creates and seeds a local database.
 
 It does not commit SQLite database or sidecar files.
+
+Running `npm run setup` removes the previous local database and its sidecar files, then recreates and seeds the database in one transaction. The reset behavior is explicit because the command is intended for reproducible local setup, not production migration.
 
 The demonstration data contains:
 
@@ -137,7 +139,12 @@ CREATE TABLE feedback (
   text TEXT NOT NULL
     CHECK (length(trim(text)) BETWEEN 1 AND 1000),
   rating INTEGER NOT NULL
-    CHECK (rating BETWEEN 1 AND 5)
+    CHECK (rating BETWEEN 1 AND 5),
+  created_at TEXT NOT NULL
+    CHECK (
+      strftime('%Y-%m-%dT%H:%M:%fZ', created_at) IS NOT NULL
+      AND strftime('%Y-%m-%dT%H:%M:%fZ', created_at) = created_at
+    )
 );
 
 CREATE INDEX feedback_event_id_idx
@@ -149,7 +156,9 @@ ON feedback(event_id, rating, id DESC);
 
 Every connection enables `PRAGMA foreign_keys = ON`.
 
-There is no `created_at` column. The assessment does not display submission time, and ULID order is sufficient for the current insertion and pagination model. An explicit semantic timestamp should be added if the product later supports imports, backfills, offline creation, auditing, reporting, or editable business timestamps.
+`created_at` stores the server-recorded submission time as canonical ISO-8601 UTC text with millisecond precision, for example `2025-01-01T00:00:10.000Z`. It is presentation and debugging data, not an ordering or cursor key. The server captures one `Date.now()` value and uses it for both the feedback ULID and `created_at`, avoiding small discrepancies between the two values. The seed fixtures also keep their fixed IDs and timestamps aligned. There is deliberately no database default: every write path must supply the server-owned value explicitly.
+
+Feedback remains ordered and paginated by `id DESC`. Keeping `created_at` out of the cursor means display concerns do not create a second ordering rule, while a future import or backfill can give identifier generation time and semantic creation time different meanings without changing the field contract.
 
 ## GraphQL contract
 
@@ -164,6 +173,7 @@ type Feedback {
   event: Event!
   text: String!
   rating: Int!
+  createdAt: String!
 }
 
 type Query {
@@ -190,6 +200,8 @@ type PageInfo {
 `first` accepts integers from 1 through 50 and defaults to 20. An out-of-range value produces a `BAD_USER_INPUT` GraphQL error rather than being silently clamped. `rating` is optional; omitting it returns all ratings for the event.
 
 The simplified `items` connection supports the required forward-only **Load older feedback** interaction. It intentionally omits Relay edges, backward traversal, edge metadata, and `totalCount` because the current client does not use them.
+
+`Feedback.createdAt` is the canonical ISO-8601 UTC value persisted in SQLite. A string keeps the wire contract explicit without introducing a custom scalar for one server-authored field; the frontend formats it for display.
 
 ### Submission errors
 
@@ -266,8 +278,9 @@ Queries and mutations use HTTP. Subscriptions use GraphQL over a persistent WebS
 ```text
 submitFeedback
   → validate
-  → generate F-{ULID}
-  → persist through the repository
+  → capture one server timestamp
+  → generate F-{ULID} from that time
+  → persist feedback and the same time as created_at through the repository
   → commit succeeds
   → publish to the event-scoped in-memory channel
   → return persisted feedback
@@ -298,7 +311,7 @@ The client does not create optimistic feedback because authoritative IDs are ser
 
 ## User experience
 
-The page contains an event selector, feedback form, rating filter, connection warning, feedback stream, and explicit **Load older feedback** control.
+The page contains an event selector, feedback form, rating filter, connection warning, feedback stream, and explicit **Load older feedback** control. Each feedback card renders `createdAt` as a human-readable relative time and retains the canonical UTC value in semantic time markup for accessibility and inspection. Relative labels are presentation derived and periodically refreshed from the immutable server value by the client; they do not alter cached data or trigger a database refetch.
 
 - At the top of the stream, matching live feedback appears immediately.
 - While reading older records, matching live feedback is buffered behind an **N new responses** banner.
@@ -312,8 +325,8 @@ The page contains an event selector, feedback form, rating filter, connection wa
 
 ## Testing strategy
 
-- Unit tests cover ULID behavior, cursor parsing, validation, and Apollo merge rules.
-- Repository tests use isolated real SQLite databases created from production schema and seed files.
+- Unit tests cover ULID behavior, cursor parsing, validation, timestamp presentation, and Apollo merge rules.
+- Repository tests use isolated real SQLite databases created from production schema and seed files, including canonical timestamp constraints and fixture alignment between ULIDs and `created_at`.
 - GraphQL integration tests use the real schema, resolvers, repositories, validation, and Apollo Server `executeOperation`.
 - React Testing Library verifies user-visible loading, form, filtering, pagination, buffering, retry, and connection behavior.
 - A Chromium Playwright test uses two browser contexts with the real HTTP server, WebSocket server, and a temporary SQLite file.
@@ -323,7 +336,7 @@ The end-to-end path proves that one browser can submit feedback, another receive
 ## Known limitations and production evolution
 
 - Add identity and uniqueness policies if one response per attendee becomes a requirement.
-- Add explicit timestamps when identifier-generation time is not a sufficient semantic time.
+- Add separate imported, occurred, or updated timestamps if the product later needs lifecycle semantics beyond server submission time.
 - Replace SQLite when deployment, multiple writers, or higher concurrency becomes material.
 - Replace in-memory publish/subscribe when multiple backend replicas are introduced.
 - Consider Kysely or Drizzle if database scale makes stronger generated query typing worthwhile.

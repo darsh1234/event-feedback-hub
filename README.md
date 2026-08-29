@@ -2,7 +2,7 @@
 
 A local TypeScript application for collecting anonymous event feedback and displaying new responses in real time.
 
-The repository is being developed as a sequence of focused, passing checkpoints. The current checkpoint establishes the typed workspace and quality gate; product functionality follows in later checkpoints.
+The repository is being developed as a sequence of focused, passing checkpoints. The current checkpoint adds reproducible SQLite storage to the typed workspace; GraphQL and product functionality follow in later checkpoints.
 
 ## Prerequisites
 
@@ -23,7 +23,15 @@ npm install
 
 ## Development
 
-Run the web and server workspaces together:
+Create or reset the local SQLite database from the committed schema and seed files:
+
+```bash
+npm run setup
+```
+
+This replaces `apps/server/data/event-feedback.db` with a deterministic demonstration database. Fixed seed ULIDs and their canonical UTC submission timestamps remain aligned, while the generated database stays local and is ignored by Git.
+
+Then run the web and server workspaces together:
 
 ```bash
 npm run dev

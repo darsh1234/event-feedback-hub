@@ -5,14 +5,18 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
+    "setup": "tsx src/database/setup.ts",
     "build": "tsc --project tsconfig.build.json",
     "typecheck": "tsc --project tsconfig.json --noEmit",
     "test": "vitest run"
   },
   "dependencies": {
-    "express": "^5.2.1"
+    "better-sqlite3": "^13.0.3",
+    "express": "^5.2.1",
+    "ulid": "^3.0.2"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^9.6.0",
     "@types/express": "^5.0.6",
     "@types/supertest": "^7.2.1",
     "supertest": "^7.2.2",
