@@ -2,7 +2,7 @@
 
 A local TypeScript application for collecting anonymous event feedback and displaying new responses in real time.
 
-The repository is being developed as a sequence of focused, passing checkpoints. The current checkpoint exposes seeded events, validated anonymous submissions, and filtered cursor-paginated feedback through a typed GraphQL API backed by SQLite.
+The repository is being developed as a sequence of focused, passing checkpoints. The current checkpoint exposes seeded events, validated anonymous submissions, filtered cursor-paginated feedback, and event-scoped live updates through a typed GraphQL API backed by SQLite.
 
 ## Prerequisites
 
@@ -37,7 +37,7 @@ Then run the web and server workspaces together:
 npm run dev
 ```
 
-The web application uses Vite's default development port. The server exposes `GET /health` and `POST /graphql` on port `4000`.
+The web application uses Vite's default development port. The server exposes `GET /health`, GraphQL over HTTP, and GraphQL subscriptions over WebSocket on port `4000`. Both GraphQL transports use the `/graphql` path.
 
 The current GraphQL capability can be exercised at `http://localhost:4000/graphql` with:
 
@@ -102,6 +102,25 @@ query Feedback($eventId: ID!, $rating: Int, $after: String) {
 ```
 
 Pass the returned `endCursor` as `after` to load older feedback. Cursors are opaque to clients; `first` accepts values from 1 through 50 and defaults to 20.
+
+Committed feedback can be streamed for one event with:
+
+```graphql
+subscription FeedbackAdded($eventId: ID!) {
+  feedbackAdded(eventId: $eventId) {
+    id
+    event {
+      id
+      name
+    }
+    text
+    rating
+    createdAt
+  }
+}
+```
+
+The server publishes only after SQLite persistence succeeds. The publisher is intentionally in-memory and single-process for the local take-home; rating filtering remains a client concern.
 
 GraphQL resolver signatures are generated from the committed SDL:
 

@@ -6,9 +6,9 @@ import { createGraphQLContext } from './graphql/context.js'
 const port = 4000
 const database = openDatabase(defaultDatabasePath)
 const context = createGraphQLContext(database)
-const { app } = await createApp(context)
+const { httpServer } = await createApp(context)
 
-app.listen(port, () => {
+httpServer.listen(port, () => {
   console.log(
     `Event Feedback Hub API listening on http://localhost:${port}/graphql`,
   )

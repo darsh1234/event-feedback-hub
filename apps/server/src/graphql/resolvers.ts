@@ -4,6 +4,7 @@ import {
 } from './generated/resolver-types.js'
 import { GraphQLError } from 'graphql'
 
+import type { FeedbackRecord } from '../repositories/feedbackRepository.js'
 import {
   FeedbackQueryValidationError,
   type FeedbackSubmissionErrorCode,
@@ -17,6 +18,16 @@ const graphQLErrorCodes: Record<
   INVALID_EVENT: FeedbackErrorCode.InvalidEvent,
   INVALID_RATING: FeedbackErrorCode.InvalidRating,
   TEXT_TOO_LONG: FeedbackErrorCode.TextTooLong,
+}
+
+function throwFeedbackValidationError(error: unknown): never {
+  if (error instanceof FeedbackQueryValidationError) {
+    throw new GraphQLError(error.message, {
+      extensions: { code: 'BAD_USER_INPUT' },
+    })
+  }
+
+  throw error
 }
 
 export const resolvers: Resolvers = {
@@ -60,14 +71,20 @@ export const resolvers: Resolvers = {
           ...(after === null || after === undefined ? {} : { after }),
         })
       } catch (error) {
-        if (error instanceof FeedbackQueryValidationError) {
-          throw new GraphQLError(error.message, {
-            extensions: { code: 'BAD_USER_INPUT' },
-          })
-        }
-
-        throw error
+        return throwFeedbackValidationError(error)
       }
+    },
+  },
+  Subscription: {
+    feedbackAdded: {
+      subscribe: (_parent, { eventId }, { feedbackService }) => {
+        try {
+          return feedbackService.subscribe(eventId)
+        } catch (error) {
+          return throwFeedbackValidationError(error)
+        }
+      },
+      resolve: (feedback: FeedbackRecord) => feedback,
     },
   },
 }

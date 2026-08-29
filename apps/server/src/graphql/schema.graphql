@@ -58,3 +58,7 @@ type SubmitFeedbackPayload {
 type Mutation {
   submitFeedback(input: SubmitFeedbackInput!): SubmitFeedbackPayload!
 }
+
+type Subscription {
+  feedbackAdded(eventId: ID!): Feedback!
+}

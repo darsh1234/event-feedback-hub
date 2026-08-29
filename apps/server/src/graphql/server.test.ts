@@ -7,7 +7,14 @@ import {
   openDatabase,
 } from '../database/connection.js'
 import { initializeDatabase } from '../database/initialize.js'
-import type { FeedbackRepository } from '../repositories/feedbackRepository.js'
+import type {
+  FeedbackRecord,
+  FeedbackRepository,
+} from '../repositories/feedbackRepository.js'
+import {
+  createFeedbackPubSub,
+  type FeedbackPubSub,
+} from '../services/feedbackPubSub.js'
 import { createFeedbackService } from '../services/feedbackService.js'
 import { type GraphQLContext, createGraphQLContext } from './context.js'
 import { createGraphQLServer } from './server.js'
@@ -52,12 +59,26 @@ const submitFeedbackMutation = `
 describe('GraphQL API', () => {
   let context: GraphQLContext
   let database: DatabaseConnection
+  let feedbackPubSub: FeedbackPubSub
   let graphQLServer: ApolloServer<GraphQLContext>
+  let publishedFeedback: FeedbackRecord[]
 
   beforeEach(() => {
     database = openDatabase(':memory:')
     initializeDatabase(database)
-    context = createGraphQLContext(database, { now: () => submittedAt })
+    publishedFeedback = []
+    const inMemoryFeedbackPubSub = createFeedbackPubSub()
+    feedbackPubSub = {
+      publish: (feedback) => {
+        publishedFeedback.push(feedback)
+        inMemoryFeedbackPubSub.publish(feedback)
+      },
+      subscribe: (eventId) => inMemoryFeedbackPubSub.subscribe(eventId),
+    }
+    context = createGraphQLContext(database, {
+      feedbackPubSub,
+      now: () => submittedAt,
+    })
     graphQLServer = createGraphQLServer()
   })
 
@@ -171,6 +192,7 @@ describe('GraphQL API', () => {
         errors: [],
       },
     })
+    expect(publishedFeedback).toEqual([storedFeedback])
   })
 
   it('returns all applicable validation errors without writing feedback', async () => {
@@ -222,6 +244,7 @@ describe('GraphQL API', () => {
         .prepare<[], CountRow>('SELECT COUNT(*) AS count FROM feedback')
         .get(),
     ).toEqual({ count: 25 })
+    expect(publishedFeedback).toEqual([])
   })
 
   it('distinguishes feedback that exceeds the text limit', async () => {
@@ -263,6 +286,7 @@ describe('GraphQL API', () => {
         .prepare<[], CountRow>('SELECT COUNT(*) AS count FROM feedback')
         .get(),
     ).toEqual({ count: 25 })
+    expect(publishedFeedback).toEqual([])
   })
 
   it('keeps unexpected repository failures as top-level GraphQL errors', async () => {
@@ -279,7 +303,7 @@ describe('GraphQL API', () => {
       feedbackService: createFeedbackService(
         context.eventRepository,
         failingFeedbackRepository,
-        { now: () => submittedAt },
+        { feedbackPubSub, now: () => submittedAt },
       ),
     }
     const response = await graphQLServer.executeOperation(
@@ -312,5 +336,6 @@ describe('GraphQL API', () => {
         .prepare<[], CountRow>('SELECT COUNT(*) AS count FROM feedback')
         .get(),
     ).toEqual({ count: 25 })
+    expect(publishedFeedback).toEqual([])
   })
 })

@@ -280,7 +280,7 @@ Relay-style connections are future scope if per-edge metadata, backward traversa
 
 ## Real-time delivery
 
-Queries and mutations use HTTP. Subscriptions use GraphQL over a persistent WebSocket.
+Queries and mutations use HTTP. Subscriptions use GraphQL over a persistent WebSocket. Both transports use `/graphql` and the same executable schema and application context. Apollo's shutdown lifecycle drains the shared HTTP server and disposes active WebSocket operations together.
 
 ```text
 submitFeedback

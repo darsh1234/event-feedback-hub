@@ -4,6 +4,7 @@ import {
   type EventRepository,
 } from '../repositories/eventRepository.js'
 import { createFeedbackRepository } from '../repositories/feedbackRepository.js'
+import type { FeedbackPubSub } from '../services/feedbackPubSub.js'
 import {
   createFeedbackService,
   type FeedbackService,
@@ -15,6 +16,7 @@ export interface GraphQLContext {
 }
 
 interface GraphQLContextOptions {
+  feedbackPubSub?: FeedbackPubSub
   now?: () => number
 }
 

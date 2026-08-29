@@ -85,6 +85,15 @@ export type SubmitFeedbackPayload = {
   feedback?: Maybe<Feedback>
 }
 
+export type Subscription = {
+  __typename?: 'Subscription'
+  feedbackAdded: Feedback
+}
+
+export type SubscriptionFeedbackAddedArgs = {
+  eventId: Scalars['ID']['input']
+}
+
 export type UserError = {
   __typename?: 'UserError'
   code: FeedbackErrorCode
@@ -235,6 +244,7 @@ export type ResolversTypes = ResolversObject<{
       feedback?: Maybe<ResolversTypes['Feedback']>
     }
   >
+  Subscription: ResolverTypeWrapper<Record<PropertyKey, never>>
   UserError: ResolverTypeWrapper<UserError>
 }>
 
@@ -256,6 +266,7 @@ export type ResolversParentTypes = ResolversObject<{
   SubmitFeedbackPayload: Omit<SubmitFeedbackPayload, 'feedback'> & {
     feedback?: Maybe<ResolversParentTypes['Feedback']>
   }
+  Subscription: Record<PropertyKey, never>
   UserError: UserError
 }>
 
@@ -338,6 +349,20 @@ export type SubmitFeedbackPayloadResolvers<
   >
 }>
 
+export type SubscriptionResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes['Subscription'] =
+    ResolversParentTypes['Subscription'],
+> = ResolversObject<{
+  feedbackAdded?: SubscriptionResolver<
+    ResolversTypes['Feedback'],
+    'feedbackAdded',
+    ParentType,
+    ContextType,
+    RequireFields<SubscriptionFeedbackAddedArgs, 'eventId'>
+  >
+}>
+
 export type UserErrorResolvers<
   ContextType = GraphQLContext,
   ParentType extends ResolversParentTypes['UserError'] =
@@ -356,5 +381,6 @@ export type Resolvers<ContextType = GraphQLContext> = ResolversObject<{
   PageInfo?: PageInfoResolvers<ContextType>
   Query?: QueryResolvers<ContextType>
   SubmitFeedbackPayload?: SubmitFeedbackPayloadResolvers<ContextType>
+  Subscription?: SubscriptionResolvers<ContextType>
   UserError?: UserErrorResolvers<ContextType>
 }>

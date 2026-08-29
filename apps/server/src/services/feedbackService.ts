@@ -9,6 +9,7 @@ import type {
   FeedbackRecord,
   FeedbackRepository,
 } from '../repositories/feedbackRepository.js'
+import { createFeedbackPubSub, type FeedbackPubSub } from './feedbackPubSub.js'
 
 export const feedbackSubmissionErrorCodes = {
   emptyText: 'EMPTY_TEXT',
@@ -61,23 +62,32 @@ export class FeedbackQueryValidationError extends Error {
 
 export interface FeedbackService {
   list(input: ListFeedbackInput): FeedbackConnection
+  subscribe(eventId: string): AsyncIterableIterator<FeedbackRecord>
   submit(input: SubmitFeedbackInput): SubmitFeedbackResult
 }
 
 interface FeedbackServiceOptions {
+  feedbackPubSub?: FeedbackPubSub
   now?: () => number
 }
 
 export function createFeedbackService(
   eventRepository: EventRepository,
   feedbackRepository: FeedbackRepository,
-  { now = Date.now }: FeedbackServiceOptions = {},
+  {
+    feedbackPubSub = createFeedbackPubSub(),
+    now = Date.now,
+  }: FeedbackServiceOptions = {},
 ): FeedbackService {
+  const validateEvent = (eventId: string) => {
+    if (!isEventId(eventId) || !eventRepository.exists(eventId)) {
+      throw new FeedbackQueryValidationError('Select a valid event.')
+    }
+  }
+
   return {
     list: ({ eventId, rating, first, after }) => {
-      if (!isEventId(eventId) || !eventRepository.exists(eventId)) {
-        throw new FeedbackQueryValidationError('Select a valid event.')
-      }
+      validateEvent(eventId)
 
       if (
         rating !== undefined &&
@@ -127,6 +137,10 @@ export function createFeedbackService(
         },
       }
     },
+    subscribe: (eventId) => {
+      validateEvent(eventId)
+      return feedbackPubSub.subscribe(eventId)
+    },
     submit: ({ eventId, text, rating }) => {
       const trimmedText = text.trim()
       const errors: FeedbackSubmissionError[] = []
@@ -173,6 +187,8 @@ export function createFeedbackService(
         rating,
         createdAt: new Date(submittedAt).toISOString(),
       })
+
+      feedbackPubSub.publish(feedback)
 
       return { feedback, errors: [] }
     },

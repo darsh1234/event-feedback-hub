@@ -13,17 +13,21 @@
   "dependencies": {
     "@apollo/server": "^5.5.1",
     "@as-integrations/express5": "^1.1.2",
+    "@graphql-tools/schema": "^10.1.0",
     "better-sqlite3": "^13.0.3",
     "cors": "^2.8.6",
     "express": "^5.2.1",
     "graphql": "^16.14.2",
-    "ulid": "^3.0.2"
+    "graphql-ws": "^6.2.1",
+    "ulid": "^3.0.2",
+    "ws": "^8.21.3"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^9.6.0",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/supertest": "^7.2.1",
+    "@types/ws": "^8.18.1",
     "supertest": "^7.2.2",
     "tsx": "^4.23.12"
   }
