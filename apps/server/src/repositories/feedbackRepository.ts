@@ -28,11 +28,16 @@ export interface FeedbackRecordPage {
   hasNextPage: boolean
 }
 
+/** Persistence contract for appending and paging feedback records. */
 export interface FeedbackRepository {
   create(input: CreateFeedbackRecord): FeedbackRecord
   list(input: ListFeedbackRecordsInput): FeedbackRecordPage
 }
 
+/**
+ * Provides append-only feedback persistence and stable newest-first cursor
+ * pagination through parameterized SQLite statements.
+ */
 export function createFeedbackRepository(
   database: DatabaseConnection,
 ): FeedbackRepository {
@@ -128,6 +133,7 @@ export function createFeedbackRepository(
       return feedback
     },
     list: ({ eventId, rating, first, afterId }) => {
+      // One extra row determines hasNextPage without a separate COUNT query.
       const limit = first + 1
       let rows: FeedbackRecord[]
 

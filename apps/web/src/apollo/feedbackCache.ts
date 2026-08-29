@@ -7,8 +7,10 @@ import {
   type FeedbackQueryVariables,
 } from '../graphql/generated/graphql'
 
+/** Generated feedback shape shared by cache helpers and presentation components. */
 export type FeedbackListItem = FeedbackQuery['feedback']['items'][number]
 
+/** Matches the server's default page size for every cache read and write. */
 export const feedbackPageSize = 20
 
 type CachedFeedbackItem = Reference | StoreObject
@@ -32,12 +34,17 @@ function hasAfterCursor(args: unknown) {
   )
 }
 
+/**
+ * Treats event and rating as list identity while appending cursor pages without
+ * duplicating normalized feedback references.
+ */
 export const feedbackFieldPolicy: FieldPolicy<
   CachedFeedbackConnection,
   CachedFeedbackConnection
 > = {
   keyArgs: ['eventId', 'rating'],
   merge(existing, incoming, { args, readField }) {
+    // A request without `after` is the authoritative newest page for this list.
     if (!hasAfterCursor(args)) {
       return incoming
     }
@@ -68,6 +75,10 @@ export const feedbackFieldPolicy: FieldPolicy<
   },
 }
 
+/**
+ * Prepends a matching feedback record to an existing visible list, preserving
+ * the oldest loaded cursor so subsequent pagination continues correctly.
+ */
 export function prependFeedbackToCache(
   cache: ApolloCache,
   feedback: FeedbackListItem,

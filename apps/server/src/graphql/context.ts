@@ -10,6 +10,7 @@ import {
   type FeedbackService,
 } from '../services/feedbackService.js'
 
+/** Dependencies exposed to every GraphQL resolver operation. */
 export interface GraphQLContext {
   eventRepository: EventRepository
   feedbackService: FeedbackService
@@ -20,6 +21,10 @@ interface GraphQLContextOptions {
   now?: () => number
 }
 
+/**
+ * Composes repositories and domain services once for use by HTTP requests and
+ * WebSocket subscription operations.
+ */
 export function createGraphQLContext(
   database: DatabaseConnection,
   options: GraphQLContextOptions = {},

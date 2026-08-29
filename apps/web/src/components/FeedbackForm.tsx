@@ -15,6 +15,7 @@ type FieldErrors = Partial<Record<FeedbackField, string>>
 const maximumFeedbackLength = 1000
 const ratings = [1, 2, 3, 4, 5] as const
 
+/** Provides immediate client feedback before the server enforces the same bounds. */
 function validateFeedback(text: string, rating: number | null): FieldErrors {
   const errors: FieldErrors = {}
   const trimmedText = text.trim()
@@ -32,6 +33,7 @@ function validateFeedback(text: string, rating: number | null): FieldErrors {
   return errors
 }
 
+/** Submits anonymous feedback while preserving user input on every failure path. */
 export function FeedbackForm({ eventId, onSubmitted }: FeedbackFormProps) {
   const [text, setText] = useState('')
   const [rating, setRating] = useState<number | null>(null)
@@ -40,6 +42,7 @@ export function FeedbackForm({ eventId, onSubmitted }: FeedbackFormProps) {
   const [successMessage, setSuccessMessage] = useState('')
   const [submitFeedback, { loading }] = useMutation(SubmitFeedbackDocument)
 
+  /** Validates, submits, and reconciles structured server errors with the form. */
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
@@ -78,6 +81,7 @@ export function FeedbackForm({ eventId, onSubmitted }: FeedbackFormProps) {
         const serverFieldErrors: FieldErrors = {}
         const generalErrors: string[] = []
 
+        // Keep field-specific errors beside their controls and surface the rest once.
         for (const error of payload.errors) {
           if (error.field === 'text' || error.field === 'rating') {
             serverFieldErrors[error.field] = error.message

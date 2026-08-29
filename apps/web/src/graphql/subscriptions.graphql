@@ -1,3 +1,4 @@
+# Receive newly persisted feedback for the selected event.
 subscription FeedbackAdded($eventId: ID!) {
   feedbackAdded(eventId: $eventId) {
     __typename

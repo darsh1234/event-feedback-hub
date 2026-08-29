@@ -1,3 +1,4 @@
+# Submit feedback and request both the saved entity and structured user errors.
 mutation SubmitFeedback($input: SubmitFeedbackInput!) {
   submitFeedback(input: $input) {
     feedback {

@@ -8,9 +8,11 @@ export type Incremental<T> =
       [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never
     }
 import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core'
+/** Stable machine-readable codes for expected submission failures. */
 export type FeedbackErrorCode =
   'EMPTY_TEXT' | 'INVALID_EVENT' | 'INVALID_RATING' | 'TEXT_TOO_LONG'
 
+/** Anonymous feedback supplied by the attendee. */
 export type SubmitFeedbackInput = {
   eventId: string | number
   rating: number

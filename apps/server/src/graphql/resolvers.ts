@@ -20,6 +20,7 @@ const graphQLErrorCodes: Record<
   TEXT_TOO_LONG: FeedbackErrorCode.TextTooLong,
 }
 
+/** Converts expected query validation failures into GraphQL input errors. */
 function throwFeedbackValidationError(error: unknown): never {
   if (error instanceof FeedbackQueryValidationError) {
     throw new GraphQLError(error.message, {
@@ -30,6 +31,7 @@ function throwFeedbackValidationError(error: unknown): never {
   throw error
 }
 
+/** Maps the generated GraphQL contract onto the repository-backed services. */
 export const resolvers: Resolvers = {
   Feedback: {
     event: ({ eventId }, _arguments, { eventRepository }) => {

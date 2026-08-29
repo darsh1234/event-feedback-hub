@@ -17,12 +17,14 @@ export type Scalars = {
   Float: { input: number; output: number }
 }
 
+/** A predefined event that can receive anonymous feedback. */
 export type Event = {
   __typename?: 'Event'
   id: Scalars['ID']['output']
   name: Scalars['String']['output']
 }
 
+/** One immutable feedback submission recorded by the server. */
 export type Feedback = {
   __typename?: 'Feedback'
   createdAt: Scalars['String']['output']
@@ -32,12 +34,14 @@ export type Feedback = {
   text: Scalars['String']['output']
 }
 
+/** A forward-only page of feedback and its continuation metadata. */
 export type FeedbackConnection = {
   __typename?: 'FeedbackConnection'
   items: Array<Feedback>
   pageInfo: PageInfo
 }
 
+/** Stable machine-readable codes for expected submission failures. */
 export enum FeedbackErrorCode {
   EmptyText = 'EMPTY_TEXT',
   InvalidEvent = 'INVALID_EVENT',
@@ -47,6 +51,7 @@ export enum FeedbackErrorCode {
 
 export type Mutation = {
   __typename?: 'Mutation'
+  /** Validates, persists, and publishes one anonymous submission. */
   submitFeedback: SubmitFeedbackPayload
 }
 
@@ -54,6 +59,7 @@ export type MutationSubmitFeedbackArgs = {
   input: SubmitFeedbackInput
 }
 
+/** Describes whether and where the client can request an older page. */
 export type PageInfo = {
   __typename?: 'PageInfo'
   endCursor?: Maybe<Scalars['String']['output']>
@@ -62,7 +68,9 @@ export type PageInfo = {
 
 export type Query = {
   __typename?: 'Query'
+  /** Lists every predefined event for the selection control. */
   events: Array<Event>
+  /** Returns one newest-first page for an event and optional rating. */
   feedback: FeedbackConnection
 }
 
@@ -73,12 +81,14 @@ export type QueryFeedbackArgs = {
   rating?: InputMaybe<Scalars['Int']['input']>
 }
 
+/** Anonymous feedback supplied by the attendee. */
 export type SubmitFeedbackInput = {
   eventId: Scalars['ID']['input']
   rating: Scalars['Int']['input']
   text: Scalars['String']['input']
 }
 
+/** Returns either persisted feedback or structured validation errors. */
 export type SubmitFeedbackPayload = {
   __typename?: 'SubmitFeedbackPayload'
   errors: Array<UserError>
@@ -87,6 +97,7 @@ export type SubmitFeedbackPayload = {
 
 export type Subscription = {
   __typename?: 'Subscription'
+  /** Streams newly persisted feedback for one event. */
   feedbackAdded: Feedback
 }
 
@@ -94,6 +105,7 @@ export type SubscriptionFeedbackAddedArgs = {
   eventId: Scalars['ID']['input']
 }
 
+/** An expected validation failure suitable for direct UI presentation. */
 export type UserError = {
   __typename?: 'UserError'
   code: FeedbackErrorCode

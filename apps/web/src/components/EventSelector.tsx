@@ -7,6 +7,7 @@ interface EventSelectorProps {
   selectedEventId: string
 }
 
+/** Loads the predefined events and presents selection with retryable error state. */
 export function EventSelector({
   onSelect,
   selectedEventId,

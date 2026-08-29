@@ -1,5 +1,6 @@
 import type { FeedbackRecord } from '../repositories/feedbackRepository.js'
 
+/** Event-scoped real-time delivery contract used by the feedback service. */
 export interface FeedbackPubSub {
   publish(feedback: FeedbackRecord): void
   subscribe(eventId: string): AsyncIterableIterator<FeedbackRecord>
@@ -10,6 +11,10 @@ interface FeedbackSubscriber {
   push(feedback: FeedbackRecord): void
 }
 
+/**
+ * Creates an event-scoped publisher whose async iterators plug directly into
+ * GraphQL subscriptions in the single-process application.
+ */
 export function createFeedbackPubSub(): FeedbackPubSub {
   const subscribersByEvent = new Map<string, Set<FeedbackSubscriber>>()
 
@@ -57,6 +62,7 @@ export function createFeedbackPubSub(): FeedbackPubSub {
 
           const resolveNext = pendingNext.shift()
 
+          // Queue a value only when the consumer has not already requested it.
           if (resolveNext === undefined) {
             queuedFeedback.push(feedback)
             return
@@ -88,6 +94,7 @@ export function createFeedbackPubSub(): FeedbackPubSub {
             return Promise.resolve({ done: true, value: undefined })
           }
 
+          // Hold the iterator request until publish supplies the next value.
           return new Promise<IteratorResult<FeedbackRecord>>((resolve) => {
             pendingNext.push(resolve)
           })

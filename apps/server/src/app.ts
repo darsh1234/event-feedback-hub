@@ -11,12 +11,17 @@ import type { GraphQLContext } from './graphql/context.js'
 import { graphQLSchema } from './graphql/schema.js'
 import { createGraphQLServer } from './graphql/server.js'
 
+/** Runtime handles needed by the entry point and integration tests. */
 export interface Application {
   app: Express
   graphQLServer: ApolloServer<GraphQLContext>
   httpServer: HttpServer
 }
 
+/**
+ * Builds the shared HTTP and WebSocket application around one GraphQL schema
+ * and disposes both transports through Apollo's shutdown lifecycle.
+ */
 export async function createApp(context: GraphQLContext): Promise<Application> {
   const app = express()
   const httpServer = createServer(app)

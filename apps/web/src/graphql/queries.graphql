@@ -1,3 +1,4 @@
+# Populate the event selector from the server-owned event catalog.
 query Events {
   events {
     id

@@ -17,6 +17,7 @@ interface FeedbackStreamProps {
 
 const ratings = [1, 2, 3, 4, 5] as const
 
+/** Presents the All/1-5 rating choices as an accessible pressed-button group. */
 function RatingFilter({
   rating,
   setRating,
@@ -51,6 +52,7 @@ function RatingFilter({
   )
 }
 
+/** Reserves the stream's layout while the initial feedback page is loading. */
 function FeedbackLoadingState() {
   return (
     <div className="feedback-loading" role="status">
@@ -62,6 +64,7 @@ function FeedbackLoadingState() {
   )
 }
 
+/** Renders a five-star visual while announcing the numeric rating once. */
 function FeedbackRating({ rating }: { rating: number }) {
   return (
     <span
@@ -79,6 +82,10 @@ function FeedbackRating({ rating }: { rating: number }) {
   )
 }
 
+/**
+ * Renders one event/rating feedback list with cursor pagination, empty states,
+ * relative timestamps, and a controlled live-response reveal action.
+ */
 export function FeedbackStream({
   bufferedFeedbackCount,
   eventId,
@@ -105,6 +112,7 @@ export function FeedbackStream({
   )
 
   useEffect(() => {
+    // Refresh presentation labels locally; persisted timestamps never change.
     const intervalId = window.setInterval(() => setNow(Date.now()), 60_000)
 
     return () => window.clearInterval(intervalId)
@@ -118,11 +126,13 @@ export function FeedbackStream({
     onAtTopChange(true)
   }, [eventId, onAtTopChange, rating])
 
+  /** Clears pagination errors before switching to another logical list. */
   function changeRating(nextRating: number | null) {
     setPaginationError('')
     onRatingChange(nextRating)
   }
 
+  /** Requests the next cursor page without discarding the visible responses. */
   async function loadOlderFeedback() {
     const endCursor = data?.feedback.pageInfo.endCursor
 
@@ -133,6 +143,7 @@ export function FeedbackStream({
     setPaginationError('')
 
     try {
+      // Apollo's field policy appends this page and retains unique item IDs.
       await fetchMore({
         variables: {
           ...variables,
@@ -146,6 +157,7 @@ export function FeedbackStream({
     }
   }
 
+  /** Reveals buffered responses and returns the stream viewport to the newest item. */
   function revealBufferedFeedback() {
     onRevealBufferedFeedback()
 

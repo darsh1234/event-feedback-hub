@@ -1,3 +1,5 @@
+-- Three events expose populated and empty UI states; 25 responses cross the
+-- default 20-item page boundary and distribute evenly across all ratings.
 INSERT INTO events (id, name)
 VALUES
   ('E-01JGFJJZ000JX0K3SAK84YSW4T', 'Document Intelligence Workshop'),

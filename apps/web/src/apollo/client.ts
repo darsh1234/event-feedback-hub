@@ -30,6 +30,7 @@ const link = split(
   httpLink,
 )
 
+/** Creates the normalized cache with the feedback list's cursor merge policy. */
 export function createApolloCache() {
   return new InMemoryCache({
     typePolicies: {
@@ -42,6 +43,7 @@ export function createApolloCache() {
   })
 }
 
+/** Shared client that routes subscriptions to WebSocket and other operations to HTTP. */
 export const apolloClient = new ApolloClient({
   cache: createApolloCache(),
   link,

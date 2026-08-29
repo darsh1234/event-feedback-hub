@@ -13,6 +13,7 @@ interface EventFeedbackExperienceProps {
   eventId: string
 }
 
+/** Coordinates submission, filtering, subscription delivery, and live buffering. */
 export function EventFeedbackExperience({
   eventId,
 }: EventFeedbackExperienceProps) {
@@ -23,6 +24,7 @@ export function EventFeedbackExperience({
     [],
   )
 
+  // Use one merge path for mutation and subscription results so IDs deduplicate.
   const receiveFeedback = useCallback(
     (feedback: FeedbackListItem) => {
       if (
@@ -39,6 +41,7 @@ export function EventFeedbackExperience({
         return
       }
 
+      // Keep live responses out of the reader's way until they return to the top.
       setBufferedFeedback((currentFeedback) =>
         currentFeedback.some(({ id }) => id === feedback.id)
           ? currentFeedback
@@ -60,13 +63,17 @@ export function EventFeedbackExperience({
     variables: { eventId },
   })
 
+  /** Resets transient stream state when the active logical cache list changes. */
   function changeRating(nextRating: number | null) {
+    // Buffered records belong to the filter that was active when they arrived.
     setBufferedFeedback([])
     setIsAtTop(true)
     setRating(nextRating)
   }
 
+  /** Moves buffered live feedback into Apollo when the reader requests it. */
   function revealBufferedFeedback() {
+    // Retain any item whose target cache list has not been loaded yet.
     const remainingFeedback = bufferedFeedback.filter(
       (feedback) =>
         !prependFeedbackToCache(client.cache, feedback, eventId, rating),

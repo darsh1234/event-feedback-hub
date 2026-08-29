@@ -6,6 +6,7 @@ function formatUnit(value: number, unit: string) {
   return `${value.toLocaleString()} ${unit}${value === 1 ? '' : 's'} ago`
 }
 
+/** Converts a canonical timestamp into a compact, non-future relative label. */
 export function formatRelativeTime(createdAt: string, now = Date.now()) {
   const createdAtTime = Date.parse(createdAt)
 
@@ -40,6 +41,7 @@ export function formatRelativeTime(createdAt: string, now = Date.now()) {
   return formatUnit(Math.floor(days / 365), 'year')
 }
 
+/** Formats a canonical timestamp for the feedback card's inspectable tooltip. */
 export function formatAbsoluteTime(createdAt: string) {
   const date = new Date(createdAt)
 

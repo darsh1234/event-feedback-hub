@@ -11,6 +11,7 @@ import type {
 } from '../repositories/feedbackRepository.js'
 import { createFeedbackPubSub, type FeedbackPubSub } from './feedbackPubSub.js'
 
+/** Stable internal codes translated to the generated GraphQL enum. */
 export const feedbackSubmissionErrorCodes = {
   emptyText: 'EMPTY_TEXT',
   invalidEvent: 'INVALID_EVENT',
@@ -53,6 +54,7 @@ export interface FeedbackConnection {
   }
 }
 
+/** Identifies expected validation failures for feedback query arguments. */
 export class FeedbackQueryValidationError extends Error {
   constructor(message: string) {
     super(message)
@@ -60,6 +62,7 @@ export class FeedbackQueryValidationError extends Error {
   }
 }
 
+/** Domain contract consumed by the GraphQL resolver layer. */
 export interface FeedbackService {
   list(input: ListFeedbackInput): FeedbackConnection
   subscribe(eventId: string): AsyncIterableIterator<FeedbackRecord>
@@ -71,6 +74,10 @@ interface FeedbackServiceOptions {
   now?: () => number
 }
 
+/**
+ * Owns authoritative feedback validation, cursor translation, persistence,
+ * and post-commit publication while keeping GraphQL and SQL concerns separate.
+ */
 export function createFeedbackService(
   eventRepository: EventRepository,
   feedbackRepository: FeedbackRepository,
@@ -179,6 +186,7 @@ export function createFeedbackService(
         return { feedback: null, errors }
       }
 
+      // One timestamp keeps the sortable ULID and displayed creation time aligned.
       const submittedAt = now()
       const feedback = feedbackRepository.create({
         id: createFeedbackId(submittedAt),
@@ -188,6 +196,7 @@ export function createFeedbackService(
         createdAt: new Date(submittedAt).toISOString(),
       })
 
+      // Publish only the record SQLite successfully returned after insertion.
       feedbackPubSub.publish(feedback)
 
       return { feedback, errors: [] }

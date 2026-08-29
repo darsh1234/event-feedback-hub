@@ -1,3 +1,4 @@
+# Load one newest-first page for the selected event and optional rating.
 query Feedback($eventId: ID!, $rating: Int, $first: Int!, $after: String) {
   feedback(eventId: $eventId, rating: $rating, first: $first, after: $after) {
     __typename

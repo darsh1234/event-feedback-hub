@@ -4,6 +4,7 @@ import './App.css'
 import { EventSelector } from './components/EventSelector'
 import { EventFeedbackExperience } from './components/EventFeedbackExperience'
 
+/** Renders the application shell and activates feedback features after selection. */
 function App() {
   const [selectedEventId, setSelectedEventId] = useState('')
 

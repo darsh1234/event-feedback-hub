@@ -5,12 +5,14 @@ export interface EventRecord {
   name: string
 }
 
+/** Persistence contract for the predefined, read-only event catalog. */
 export interface EventRepository {
   exists(id: string): boolean
   findById(id: string): EventRecord | undefined
   list(): EventRecord[]
 }
 
+/** Provides read-only access to the predefined events stored in SQLite. */
 export function createEventRepository(
   database: DatabaseConnection,
 ): EventRepository {

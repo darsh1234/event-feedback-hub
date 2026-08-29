@@ -1,8 +1,14 @@
+"""
+A predefined event that can receive anonymous feedback.
+"""
 type Event {
   id: ID!
   name: String!
 }
 
+"""
+One immutable feedback submission recorded by the server.
+"""
 type Feedback {
   id: ID!
   event: Event!
@@ -12,7 +18,13 @@ type Feedback {
 }
 
 type Query {
+  """
+  Lists every predefined event for the selection control.
+  """
   events: [Event!]!
+  """
+  Returns one newest-first page for an event and optional rating.
+  """
   feedback(
     eventId: ID!
     rating: Int
@@ -21,22 +33,34 @@ type Query {
   ): FeedbackConnection!
 }
 
+"""
+A forward-only page of feedback and its continuation metadata.
+"""
 type FeedbackConnection {
   items: [Feedback!]!
   pageInfo: PageInfo!
 }
 
+"""
+Describes whether and where the client can request an older page.
+"""
 type PageInfo {
   endCursor: String
   hasNextPage: Boolean!
 }
 
+"""
+Anonymous feedback supplied by the attendee.
+"""
 input SubmitFeedbackInput {
   eventId: ID!
   text: String!
   rating: Int!
 }
 
+"""
+Stable machine-readable codes for expected submission failures.
+"""
 enum FeedbackErrorCode {
   INVALID_EVENT
   EMPTY_TEXT
@@ -44,21 +68,33 @@ enum FeedbackErrorCode {
   INVALID_RATING
 }
 
+"""
+An expected validation failure suitable for direct UI presentation.
+"""
 type UserError {
   field: String
   code: FeedbackErrorCode!
   message: String!
 }
 
+"""
+Returns either persisted feedback or structured validation errors.
+"""
 type SubmitFeedbackPayload {
   feedback: Feedback
   errors: [UserError!]!
 }
 
 type Mutation {
+  """
+  Validates, persists, and publishes one anonymous submission.
+  """
   submitFeedback(input: SubmitFeedbackInput!): SubmitFeedbackPayload!
 }
 
 type Subscription {
+  """
+  Streams newly persisted feedback for one event.
+  """
   feedbackAdded(eventId: ID!): Feedback!
 }
