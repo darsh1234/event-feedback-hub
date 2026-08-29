@@ -1,0 +1,25 @@
+# Dependencies and build output
+node_modules/
+dist/
+coverage/
+
+# Local environment
+.env
+.env.*
+!.env.example
+
+# Local Codex instructions
+AGENTS.override.md
+
+# SQLite runtime files
+apps/server/data/*.db
+apps/server/data/*.db-shm
+apps/server/data/*.db-wal
+
+# Test artifacts
+playwright-report/
+test-results/
+
+# Editor and operating-system files
+.DS_Store
+*.swp
