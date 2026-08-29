@@ -1,0 +1,19 @@
+mutation SubmitFeedback($input: SubmitFeedbackInput!) {
+  submitFeedback(input: $input) {
+    feedback {
+      id
+      event {
+        id
+        name
+      }
+      text
+      rating
+      createdAt
+    }
+    errors {
+      field
+      code
+      message
+    }
+  }
+}

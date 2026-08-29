@@ -2,6 +2,7 @@ import { useState } from 'react'
 
 import './App.css'
 import { EventSelector } from './components/EventSelector'
+import { FeedbackForm } from './components/FeedbackForm'
 
 function App() {
   const [selectedEventId, setSelectedEventId] = useState('')
@@ -26,6 +27,10 @@ function App() {
           selectedEventId={selectedEventId}
         />
       </section>
+
+      {selectedEventId.length === 0 ? null : (
+        <FeedbackForm eventId={selectedEventId} />
+      )}
     </main>
   )
 }

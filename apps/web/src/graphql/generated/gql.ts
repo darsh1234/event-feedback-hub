@@ -14,9 +14,12 @@ import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-
  * Learn more about it here: https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#reducing-bundle-size
  */
 type Documents = {
+  'mutation SubmitFeedback($input: SubmitFeedbackInput!) {\n  submitFeedback(input: $input) {\n    feedback {\n      id\n      event {\n        id\n        name\n      }\n      text\n      rating\n      createdAt\n    }\n    errors {\n      field\n      code\n      message\n    }\n  }\n}': typeof types.SubmitFeedbackDocument
   'query Events {\n  events {\n    id\n    name\n  }\n}': typeof types.EventsDocument
 }
 const documents: Documents = {
+  'mutation SubmitFeedback($input: SubmitFeedbackInput!) {\n  submitFeedback(input: $input) {\n    feedback {\n      id\n      event {\n        id\n        name\n      }\n      text\n      rating\n      createdAt\n    }\n    errors {\n      field\n      code\n      message\n    }\n  }\n}':
+    types.SubmitFeedbackDocument,
   'query Events {\n  events {\n    id\n    name\n  }\n}': types.EventsDocument,
 }
 
@@ -34,6 +37,12 @@ const documents: Documents = {
  */
 export function graphql(source: string): unknown
 
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: 'mutation SubmitFeedback($input: SubmitFeedbackInput!) {\n  submitFeedback(input: $input) {\n    feedback {\n      id\n      event {\n        id\n        name\n      }\n      text\n      rating\n      createdAt\n    }\n    errors {\n      field\n      code\n      message\n    }\n  }\n}',
+): (typeof documents)['mutation SubmitFeedback($input: SubmitFeedbackInput!) {\n  submitFeedback(input: $input) {\n    feedback {\n      id\n      event {\n        id\n        name\n      }\n      text\n      rating\n      createdAt\n    }\n    errors {\n      field\n      code\n      message\n    }\n  }\n}']
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
