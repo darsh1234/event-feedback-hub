@@ -2,7 +2,7 @@
 
 A local TypeScript application for collecting anonymous event feedback and displaying new responses in real time.
 
-The repository is being developed as a sequence of focused, passing checkpoints. The current checkpoint exposes the seeded events through a typed GraphQL query backed by SQLite.
+The repository is being developed as a sequence of focused, passing checkpoints. The current checkpoint exposes seeded events and validated anonymous feedback submission through a typed GraphQL API backed by SQLite.
 
 ## Prerequisites
 
@@ -49,6 +49,38 @@ query Events {
   }
 }
 ```
+
+Anonymous feedback can be persisted with:
+
+```graphql
+mutation SubmitFeedback {
+  submitFeedback(
+    input: {
+      eventId: "E-01JGFJJZ000JX0K3SAK84YSW4T"
+      text: "Clear and useful session."
+      rating: 5
+    }
+  ) {
+    feedback {
+      id
+      event {
+        id
+        name
+      }
+      text
+      rating
+      createdAt
+    }
+    errors {
+      field
+      code
+      message
+    }
+  }
+}
+```
+
+Expected validation failures are returned in the payload's `errors` array. Unexpected execution or database failures remain top-level GraphQL errors.
 
 GraphQL resolver signatures are generated from the committed SDL:
 

@@ -40,4 +40,17 @@ describe('event repository', () => {
       },
     ])
   })
+
+  it('finds and checks the existence of events by ID', () => {
+    const workshopId = 'E-01JGFJJZ000JX0K3SAK84YSW4T'
+    const missingEventId = 'E-01JGFJJZ000JX0K3SAK84YSW4S'
+
+    expect(eventRepository.exists(workshopId)).toBe(true)
+    expect(eventRepository.findById(workshopId)).toEqual({
+      id: workshopId,
+      name: 'Document Intelligence Workshop',
+    })
+    expect(eventRepository.exists(missingEventId)).toBe(false)
+    expect(eventRepository.findById(missingEventId)).toBeUndefined()
+  })
 })

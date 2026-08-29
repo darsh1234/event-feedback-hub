@@ -3,15 +3,34 @@ import {
   createEventRepository,
   type EventRepository,
 } from '../repositories/eventRepository.js'
+import { createFeedbackRepository } from '../repositories/feedbackRepository.js'
+import {
+  createFeedbackService,
+  type FeedbackService,
+} from '../services/feedbackService.js'
 
 export interface GraphQLContext {
   eventRepository: EventRepository
+  feedbackService: FeedbackService
+}
+
+interface GraphQLContextOptions {
+  now?: () => number
 }
 
 export function createGraphQLContext(
   database: DatabaseConnection,
+  options: GraphQLContextOptions = {},
 ): GraphQLContext {
+  const eventRepository = createEventRepository(database)
+  const feedbackRepository = createFeedbackRepository(database)
+
   return {
-    eventRepository: createEventRepository(database),
+    eventRepository,
+    feedbackService: createFeedbackService(
+      eventRepository,
+      feedbackRepository,
+      options,
+    ),
   }
 }

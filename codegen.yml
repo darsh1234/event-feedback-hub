@@ -7,6 +7,9 @@ generates:
       - typescript-resolvers
     config:
       contextType: ../context.js#GraphQLContext
+      mappers:
+        Event: ../../repositories/eventRepository.js#EventRecord
+        Feedback: ../../repositories/feedbackRepository.js#FeedbackRecord
       useIndexSignature: true
       useTypeImports: true
 hooks:

@@ -1,7 +1,13 @@
 import type { GraphQLResolveInfo } from 'graphql'
+import type { EventRecord } from '../../repositories/eventRepository.js'
+import type { FeedbackRecord } from '../../repositories/feedbackRepository.js'
 import type { GraphQLContext } from '../context.js'
 export type Maybe<T> = T | null
 export type InputMaybe<T> = Maybe<T>
+export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
+export type RequireFields<T, K extends keyof T> = Omit<T, K> & {
+  [P in K]-?: NonNullable<T[P]>
+}
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
   ID: { input: string; output: string }
@@ -17,9 +23,53 @@ export type Event = {
   name: Scalars['String']['output']
 }
 
+export type Feedback = {
+  __typename?: 'Feedback'
+  createdAt: Scalars['String']['output']
+  event: Event
+  id: Scalars['ID']['output']
+  rating: Scalars['Int']['output']
+  text: Scalars['String']['output']
+}
+
+export enum FeedbackErrorCode {
+  EmptyText = 'EMPTY_TEXT',
+  InvalidEvent = 'INVALID_EVENT',
+  InvalidRating = 'INVALID_RATING',
+  TextTooLong = 'TEXT_TOO_LONG',
+}
+
+export type Mutation = {
+  __typename?: 'Mutation'
+  submitFeedback: SubmitFeedbackPayload
+}
+
+export type MutationSubmitFeedbackArgs = {
+  input: SubmitFeedbackInput
+}
+
 export type Query = {
   __typename?: 'Query'
   events: Array<Event>
+}
+
+export type SubmitFeedbackInput = {
+  eventId: Scalars['ID']['input']
+  rating: Scalars['Int']['input']
+  text: Scalars['String']['input']
+}
+
+export type SubmitFeedbackPayload = {
+  __typename?: 'SubmitFeedbackPayload'
+  errors: Array<UserError>
+  feedback?: Maybe<Feedback>
+}
+
+export type UserError = {
+  __typename?: 'UserError'
+  code: FeedbackErrorCode
+  field?: Maybe<Scalars['String']['output']>
+  message: Scalars['String']['output']
 }
 
 export type WithIndex<TObject> = TObject & Record<string, any>
@@ -145,19 +195,38 @@ export type DirectiveResolverFn<
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = ResolversObject<{
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>
-  Event: ResolverTypeWrapper<Event>
+  Event: ResolverTypeWrapper<EventRecord>
+  Feedback: ResolverTypeWrapper<FeedbackRecord>
+  FeedbackErrorCode: FeedbackErrorCode
   ID: ResolverTypeWrapper<Scalars['ID']['output']>
+  Int: ResolverTypeWrapper<Scalars['Int']['output']>
+  Mutation: ResolverTypeWrapper<Record<PropertyKey, never>>
   Query: ResolverTypeWrapper<Record<PropertyKey, never>>
   String: ResolverTypeWrapper<Scalars['String']['output']>
+  SubmitFeedbackInput: SubmitFeedbackInput
+  SubmitFeedbackPayload: ResolverTypeWrapper<
+    Omit<SubmitFeedbackPayload, 'feedback'> & {
+      feedback?: Maybe<ResolversTypes['Feedback']>
+    }
+  >
+  UserError: ResolverTypeWrapper<UserError>
 }>
 
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = ResolversObject<{
   Boolean: Scalars['Boolean']['output']
-  Event: Event
+  Event: EventRecord
+  Feedback: FeedbackRecord
   ID: Scalars['ID']['output']
+  Int: Scalars['Int']['output']
+  Mutation: Record<PropertyKey, never>
   Query: Record<PropertyKey, never>
   String: Scalars['String']['output']
+  SubmitFeedbackInput: SubmitFeedbackInput
+  SubmitFeedbackPayload: Omit<SubmitFeedbackPayload, 'feedback'> & {
+    feedback?: Maybe<ResolversParentTypes['Feedback']>
+  }
+  UserError: UserError
 }>
 
 export type EventResolvers<
@@ -169,6 +238,31 @@ export type EventResolvers<
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>
 }>
 
+export type FeedbackResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes['Feedback'] =
+    ResolversParentTypes['Feedback'],
+> = ResolversObject<{
+  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>
+  event?: Resolver<ResolversTypes['Event'], ParentType, ContextType>
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>
+  rating?: Resolver<ResolversTypes['Int'], ParentType, ContextType>
+  text?: Resolver<ResolversTypes['String'], ParentType, ContextType>
+}>
+
+export type MutationResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes['Mutation'] =
+    ResolversParentTypes['Mutation'],
+> = ResolversObject<{
+  submitFeedback?: Resolver<
+    ResolversTypes['SubmitFeedbackPayload'],
+    ParentType,
+    ContextType,
+    RequireFields<MutationSubmitFeedbackArgs, 'input'>
+  >
+}>
+
 export type QueryResolvers<
   ContextType = GraphQLContext,
   ParentType extends ResolversParentTypes['Query'] =
@@ -177,7 +271,34 @@ export type QueryResolvers<
   events?: Resolver<Array<ResolversTypes['Event']>, ParentType, ContextType>
 }>
 
+export type SubmitFeedbackPayloadResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes['SubmitFeedbackPayload'] =
+    ResolversParentTypes['SubmitFeedbackPayload'],
+> = ResolversObject<{
+  errors?: Resolver<Array<ResolversTypes['UserError']>, ParentType, ContextType>
+  feedback?: Resolver<
+    Maybe<ResolversTypes['Feedback']>,
+    ParentType,
+    ContextType
+  >
+}>
+
+export type UserErrorResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes['UserError'] =
+    ResolversParentTypes['UserError'],
+> = ResolversObject<{
+  code?: Resolver<ResolversTypes['FeedbackErrorCode'], ParentType, ContextType>
+  field?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>
+  message?: Resolver<ResolversTypes['String'], ParentType, ContextType>
+}>
+
 export type Resolvers<ContextType = GraphQLContext> = ResolversObject<{
   Event?: EventResolvers<ContextType>
+  Feedback?: FeedbackResolvers<ContextType>
+  Mutation?: MutationResolvers<ContextType>
   Query?: QueryResolvers<ContextType>
+  SubmitFeedbackPayload?: SubmitFeedbackPayloadResolvers<ContextType>
+  UserError?: UserErrorResolvers<ContextType>
 }>

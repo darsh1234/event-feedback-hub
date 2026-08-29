@@ -3,6 +3,42 @@ type Event {
   name: String!
 }
 
+type Feedback {
+  id: ID!
+  event: Event!
+  text: String!
+  rating: Int!
+  createdAt: String!
+}
+
 type Query {
   events: [Event!]!
+}
+
+input SubmitFeedbackInput {
+  eventId: ID!
+  text: String!
+  rating: Int!
+}
+
+enum FeedbackErrorCode {
+  INVALID_EVENT
+  EMPTY_TEXT
+  TEXT_TOO_LONG
+  INVALID_RATING
+}
+
+type UserError {
+  field: String
+  code: FeedbackErrorCode!
+  message: String!
+}
+
+type SubmitFeedbackPayload {
+  feedback: Feedback
+  errors: [UserError!]!
+}
+
+type Mutation {
+  submitFeedback(input: SubmitFeedbackInput!): SubmitFeedbackPayload!
 }
