@@ -78,15 +78,32 @@ h2 {
   font-weight: 700;
 }
 
+.event-select-control {
+  position: relative;
+}
+
 .event-selector select {
+  appearance: none;
   width: 100%;
   min-height: 3rem;
-  padding: 0 0.75rem;
+  padding: 0 3rem 0 0.75rem;
   border: 1px solid #aeb9c8;
   border-radius: 0.625rem;
   color: #172033;
   background: #ffffff;
   font: inherit;
+}
+
+.event-select-chevron {
+  position: absolute;
+  top: 50%;
+  right: 1rem;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-right: 2px solid #344157;
+  border-bottom: 2px solid #344157;
+  pointer-events: none;
+  transform: translateY(-70%) rotate(45deg);
 }
 
 .event-selector select:focus-visible,
@@ -99,6 +116,10 @@ h2 {
   color: #67758a;
   background: #eef2f7;
   cursor: wait;
+}
+
+.event-selector select:disabled + .event-select-chevron {
+  border-color: #7f8da1;
 }
 
 .event-selector-state {

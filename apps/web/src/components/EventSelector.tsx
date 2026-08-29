@@ -29,23 +29,26 @@ export function EventSelector({
   return (
     <div className="event-selector">
       <label htmlFor="event">Event</label>
-      <select
-        disabled={loading && data === undefined}
-        id="event"
-        onChange={(event) => onSelect(event.target.value)}
-        value={selectedEventId}
-      >
-        <option value="">
-          {loading && data === undefined
-            ? 'Loading events…'
-            : 'Select an event'}
-        </option>
-        {data?.events.map((event) => (
-          <option key={event.id} value={event.id}>
-            {event.name}
+      <div className="event-select-control">
+        <select
+          disabled={loading && data === undefined}
+          id="event"
+          onChange={(event) => onSelect(event.target.value)}
+          value={selectedEventId}
+        >
+          <option value="">
+            {loading && data === undefined
+              ? 'Loading events…'
+              : 'Select an event'}
           </option>
-        ))}
-      </select>
+          {data?.events.map((event) => (
+            <option key={event.id} value={event.id}>
+              {event.name}
+            </option>
+          ))}
+        </select>
+        <span aria-hidden="true" className="event-select-chevron" />
+      </div>
     </div>
   )
 }
