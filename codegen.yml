@@ -12,6 +12,12 @@ generates:
         Feedback: ../../repositories/feedbackRepository.js#FeedbackRecord
       useIndexSignature: true
       useTypeImports: true
+  apps/web/src/graphql/generated/:
+    config:
+      useTypeImports: true
+    documents:
+      - apps/web/src/**/*.graphql
+    preset: client
 hooks:
   afterOneFileWrite:
     - prettier --write

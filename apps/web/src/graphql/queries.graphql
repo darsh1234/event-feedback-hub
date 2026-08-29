@@ -1,0 +1,6 @@
+query Events {
+  events {
+    id
+    name
+  }
+}

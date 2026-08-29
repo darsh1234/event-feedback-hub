@@ -1,7 +1,7 @@
 .shell {
-  width: min(42rem, calc(100% - 2rem));
+  width: min(56rem, calc(100% - 2rem));
   margin: 0 auto;
-  padding: 6rem 0;
+  padding: 5rem 0;
 }
 
 .eyebrow {
@@ -21,6 +21,13 @@ h1 {
   line-height: 1;
 }
 
+h2 {
+  margin: 0;
+  color: #172033;
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  letter-spacing: -0.025em;
+}
+
 .summary {
   max-width: 34rem;
   margin: 1.5rem 0 0;
@@ -29,21 +36,101 @@ h1 {
   line-height: 1.7;
 }
 
-.checkpoint {
+.event-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(15rem, 0.8fr);
+  gap: 2rem;
+  align-items: end;
   margin-top: 3rem;
-  padding: 1.5rem;
+  padding: 2rem;
   border: 1px solid #d9e0e9;
   border-radius: 1rem;
   background: #ffffff;
   box-shadow: 0 1rem 3rem rgb(23 32 51 / 8%);
 }
 
-.checkpoint h2,
-.checkpoint p {
+.event-panel p {
   margin: 0;
 }
 
-.checkpoint p {
+.event-panel h2 + p {
   margin-top: 0.5rem;
   color: #526174;
+  line-height: 1.6;
+}
+
+.section-label {
+  margin-bottom: 0.5rem !important;
+  color: #526174;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.event-selector {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.event-selector label {
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.event-selector select {
+  width: 100%;
+  min-height: 3rem;
+  padding: 0 0.75rem;
+  border: 1px solid #aeb9c8;
+  border-radius: 0.625rem;
+  color: #172033;
+  background: #ffffff;
+  font: inherit;
+}
+
+.event-selector select:focus-visible,
+.event-selector-state button:focus-visible {
+  outline: 3px solid rgb(42 103 190 / 30%);
+  outline-offset: 2px;
+}
+
+.event-selector select:disabled {
+  color: #67758a;
+  background: #eef2f7;
+  cursor: wait;
+}
+
+.event-selector-state {
+  padding: 1rem;
+  border: 1px solid #e5b7b7;
+  border-radius: 0.625rem;
+  color: #7b2525;
+  background: #fff6f6;
+}
+
+.event-selector-state p {
+  margin: 0 0 0.75rem;
+}
+
+.event-selector-state button {
+  padding: 0.625rem 0.875rem;
+  border: 0;
+  border-radius: 0.5rem;
+  color: #ffffff;
+  background: #7b2525;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@media (max-width: 42rem) {
+  .shell {
+    padding: 3rem 0;
+  }
+
+  .event-panel {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
 }

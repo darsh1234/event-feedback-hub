@@ -1,17 +1,30 @@
+import { useState } from 'react'
+
 import './App.css'
+import { EventSelector } from './components/EventSelector'
 
 function App() {
+  const [selectedEventId, setSelectedEventId] = useState('')
+
   return (
     <main className="shell">
       <p className="eyebrow">TrustLayer take-home assessment</p>
       <h1>Event Feedback Hub</h1>
       <p className="summary">
-        The typed React and Node workspaces are ready for product development.
+        Choose an event to share feedback and follow the conversation as it
+        happens.
       </p>
 
-      <section aria-labelledby="checkpoint-heading" className="checkpoint">
-        <h2 id="checkpoint-heading">Checkpoint 1</h2>
-        <p>Environment and verification gate ready.</p>
+      <section aria-labelledby="event-heading" className="event-panel">
+        <div>
+          <p className="section-label">Start here</p>
+          <h2 id="event-heading">Choose an event</h2>
+          <p>Select the session whose feedback you want to view or add.</p>
+        </div>
+        <EventSelector
+          onSelect={setSelectedEventId}
+          selectedEventId={selectedEventId}
+        />
       </section>
     </main>
   )
