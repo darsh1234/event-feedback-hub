@@ -65,7 +65,7 @@ Apollo Client directly supports the chosen queries, mutations, pagination, cache
 - React Hooks and React Refresh lint rules
 - Prettier for formatting
 - `.editorconfig` for basic editor consistency
-- Vitest, React Testing Library, Apollo Server integration tests, and Playwright
+- Vitest, React Testing Library, Supertest, and Apollo Server integration tests
 - GitHub Actions running the same `npm run verify` gate used locally
 - npm install scripts denied by default, with only the required `esbuild` and `better-sqlite3` native setup explicitly approved
 
@@ -99,6 +99,158 @@ event-feedback-hub/
 - Generated operation and resolver types replace manually duplicated shared API interfaces.
 
 `npm run codegen` reads the local SDL and regenerates committed server resolver signatures without requiring a running API. Verification runs code generation before static checks. Generated files are formatted automatically and excluded from ESLint because they are tool-owned output rather than handwritten source.
+
+## System flow diagrams
+
+### Runtime architecture and type flow
+
+The browser uses two transports against one GraphQL schema. HTTP carries queries and mutations, while the WebSocket carries the event-scoped subscription. SQLite is the durable source of truth; the in-memory publisher only distributes records that have already been persisted.
+
+```mermaid
+flowchart LR
+  subgraph Browser["Browser — apps/web"]
+    UI["React components"]
+    ReactState["React transient state<br/>selection, form, scroll, live buffer"]
+    Apollo["Apollo Client<br/>normalized cache"]
+    HttpLink["HTTP link"]
+    WsLink["graphql-ws link"]
+
+    UI <--> ReactState
+    UI <--> Apollo
+    Apollo --> HttpLink
+    Apollo --> WsLink
+  end
+
+  subgraph Server["Node process — apps/server"]
+    Express["Express /graphql"]
+    WebSocket["WebSocket /graphql"]
+    ExecutableSchema["Executable GraphQL schema"]
+    Resolvers["GraphQL resolvers"]
+    FeedbackService["Feedback service<br/>validation and orchestration"]
+    EventRepository["Event repository"]
+    FeedbackRepository["Feedback repository"]
+    PubSub["Event-scoped<br/>in-memory PubSub"]
+
+    Express --> ExecutableSchema
+    WebSocket --> ExecutableSchema
+    ExecutableSchema --> Resolvers
+    Resolvers --> FeedbackService
+    Resolvers --> EventRepository
+    FeedbackService --> FeedbackRepository
+    FeedbackService --> PubSub
+    PubSub --> WebSocket
+  end
+
+  SQLite[("SQLite file<br/>durable source of truth")]
+
+  HttpLink -->|"queries and mutations over HTTP"| Express
+  WsLink <-->|"subscriptions over WebSocket"| WebSocket
+  EventRepository <--> SQLite
+  FeedbackRepository <--> SQLite
+
+  subgraph BuildTime["Build-time contract"]
+    SDL["schema.graphql<br/>API source of truth"]
+    Codegen["GraphQL Code Generator"]
+    ClientTypes["Typed client operations"]
+    ResolverTypes["Typed resolver signatures"]
+
+    SDL --> Codegen
+    Codegen --> ClientTypes
+    Codegen --> ResolverTypes
+  end
+
+  SDL -.-> ExecutableSchema
+  ClientTypes -.-> Apollo
+  ResolverTypes -.-> Resolvers
+```
+
+### Submission and real-time delivery
+
+The mutation response and the subscription can deliver the same feedback to the submitting browser. Both client paths therefore converge on the same ID-based merge behavior.
+
+```mermaid
+sequenceDiagram
+  actor User
+  participant Form as FeedbackForm
+  participant Apollo as Apollo Client
+  participant API as GraphQL mutation
+  participant Service as Feedback service
+  participant Repository as Feedback repository
+  participant DB as SQLite
+  participant PubSub as Event PubSub
+  participant Subscriber as Event subscriber
+  participant Cache as Apollo cache
+  participant Stream as Feedback stream
+
+  User->>Form: Submit event, text, and rating
+  Form->>Form: Trim and validate input
+
+  alt Frontend validation fails
+    Form-->>User: Show field errors without a request
+  else Frontend validation passes
+    Form->>Apollo: submitFeedback(input)
+    Apollo->>API: HTTP mutation
+    API->>Service: submit(input)
+    Service->>Service: Validate event, text, and rating
+
+    alt Expected backend validation failure
+      Service-->>API: feedback null and structured errors
+      API-->>Apollo: SubmitFeedbackPayload
+      Apollo-->>Form: Preserve input and show field errors
+    else Valid submission
+      Service->>Service: Capture one time and create F-ULID
+      Service->>Repository: create(feedback)
+      Repository->>DB: Parameterized INSERT
+      DB-->>Repository: Persisted row
+      Repository-->>Service: Persisted feedback
+      Service->>PubSub: Publish after persistence succeeds
+      PubSub-->>Subscriber: Feedback for matching event
+      Subscriber-->>Apollo: feedbackAdded payload
+      Service-->>API: feedback and empty errors
+      API-->>Apollo: Mutation payload
+      Apollo->>Cache: Merge by feedback ID
+      Cache-->>Stream: Render feedback once
+      Apollo-->>Form: Confirm success and clear the form
+      Note over Apollo,Cache: Mutation and subscription echoes deduplicate by ID
+    end
+  end
+```
+
+### Reading, pagination, and live cache updates
+
+The query cursor always describes the oldest loaded database row. Appending older pages replaces that cursor; prepending or buffering newer live rows does not move it.
+
+```mermaid
+flowchart TD
+  Select["Select event or rating"] --> Variables["Build variables<br/>eventId, optional rating, first 20"]
+  Variables --> Policy["Apollo cache-and-network"]
+  Policy --> Cached{"Cached list exists?"}
+  Cached -->|Yes| RenderCached["Render cached feedback immediately"]
+  Cached -->|No| Skeleton["Render loading skeletons"]
+  Policy --> HTTP["Request feedback over HTTP"]
+  HTTP --> Validate["Validate event, rating, page size, and cursor"]
+  Validate --> Query["Repository query<br/>id DESC, optional id less than cursor<br/>request first plus one"]
+  Query --> SQLite[(SQLite)]
+  SQLite --> Page["Return page and hasNextPage"]
+  Page --> PageKind{"Initial page or older page?"}
+  PageKind -->|Initial| Replace["Replace logical event/rating list"]
+  PageKind -->|Older| Append["Append unique rows<br/>replace endCursor"]
+  Replace --> Render["Render newest-first stream"]
+  Append --> Render
+  RenderCached --> Render
+  Skeleton --> Render
+
+  Live["Mutation or feedbackAdded result"] --> Matches{"Matches active event and rating?"}
+  Matches -->|No| Ignore["Do not add to visible list"]
+  Matches -->|Yes| Duplicate{"Feedback ID already present?"}
+  Duplicate -->|Yes| Ignore
+  Duplicate -->|No| Position{"Reader at top and list loaded?"}
+  Position -->|Yes| Prepend["Prepend to Apollo list<br/>preserve endCursor"]
+  Position -->|No| Buffer["Store in transient React buffer"]
+  Buffer --> Banner["Show N new responses"]
+  Banner -->|User reveals| Prepend
+  Prepend --> Render
+```
 
 ## Reproducible database setup
 
@@ -295,50 +447,48 @@ submitFeedback
 
 Publication happens only after persistence succeeds. The submitting browser can see the same entity in the mutation result and its subscription, so every merge path deduplicates by feedback ID.
 
-The in-memory publisher is intentionally non-durable and single-process. On WebSocket reconnection, the client refetches the newest SQLite page and merges by ID before resuming live delivery. A horizontally scaled production service would replace the publisher with Redis or another shared broker.
+Real-time delivery uses an event-scoped in-memory publisher, which is a deliberate fit for the assessment's single Node.js process. SQLite remains the source of truth, and the `graphql-ws` client retries a dropped transport connection. A page refresh queries SQLite and restores the current persisted view. For a multi-replica production deployment, the natural evolution would be a shared broker such as Redis plus a newest-page refetch and ID-based merge after reconnection.
 
 ## Client state and cache behavior
 
 - SQLite is the durable shared source of truth.
 - Apollo owns fetched events, feedback entities, event/rating lists, and pagination metadata.
-- React owns selected filters, unsaved form state, connection presentation, scroll position, and the temporary new-response buffer.
+- React owns selected filters, unsaved form state, scroll position, and the temporary new-response buffer.
 
 The complete feedback list is not copied into React state.
 
 Apollo identifies entities by `__typename` plus `id`. Feedback field identity uses `eventId` and `rating`, but not `first` or `after`, because pagination arguments identify pages of one logical list.
 
 - Events use `cache-first` because they are seeded and read-only.
-- Feedback uses `cache-and-network` so cached results render immediately while SQLite is checked for missed changes.
+- Feedback uses `cache-and-network` so cached results render immediately while SQLite is checked for changes made since that event/rating view was last loaded.
 - Older pages append unique items and replace the oldest `endCursor`.
 - Live items prepend or buffer while preserving that cursor.
 - Mutation results are added only to matching visible lists and later subscription delivery is deduplicated.
-- Reconnection refetches the newest page and merges by ID.
 
 The client does not create optimistic feedback because authoritative IDs are server-generated, validation may reject a submission, and local SQLite persistence should be fast.
 
 ## User experience
 
-The page contains an event selector, feedback form, rating filter, connection warning, feedback stream, and explicit **Load older feedback** control. Each feedback card renders `createdAt` as a human-readable relative time and retains the canonical UTC value in semantic time markup for accessibility and inspection. Relative labels are presentation derived and periodically refreshed from the immutable server value by the client; they do not alter cached data or trigger a database refetch.
+The page contains an event selector, feedback form, rating filter, feedback stream, and explicit **Load older feedback** control. Each feedback card renders `createdAt` as a human-readable relative time and retains the canonical UTC value in semantic time markup for accessibility and inspection. Relative labels are presentation derived and periodically refreshed from the immutable server value by the client; they do not alter cached data or trigger a database refetch.
 
 - At the top of the stream, matching live feedback appears immediately.
 - While reading older records, matching live feedback is buffered behind an **N new responses** banner.
 - Initial loading uses feedback skeletons when no cached data exists.
 - Event loading and failures disable progress until events can be retried.
 - Empty events invite the first response; empty filters explain how to clear the filter.
-- Failed background refreshes retain cached content and present a nonblocking Retry action.
+- Initial feedback failures present a Retry action.
 - Failed pagination retains the existing list.
 - Submission disables the relevant controls, preserves fields on failure, and clears them only after confirmed persistence.
-- WebSocket loss shows a nonblocking reconnect warning while HTTP operations remain usable.
 
 ## Testing strategy
 
 - Unit tests cover ULID behavior, cursor parsing, validation, timestamp presentation, and Apollo merge rules.
 - Repository tests use isolated real SQLite databases created from production schema and seed files, including canonical timestamp constraints and fixture alignment between ULIDs and `created_at`.
 - GraphQL integration tests use the real schema, resolvers, repositories, validation, and Apollo Server `executeOperation`.
-- React Testing Library verifies user-visible loading, form, filtering, pagination, buffering, retry, and connection behavior.
-- A Chromium Playwright test uses two browser contexts with the real HTTP server, WebSocket server, and a temporary SQLite file.
+- Server transport tests exercise GraphQL over real HTTP and `graphql-ws` connections against an isolated in-memory SQLite database.
+- React Testing Library verifies user-visible loading, form, filtering, pagination, buffering, and retry behavior.
 
-The end-to-end path proves that one browser can submit feedback, another receives it live, rating filters remain correct, and refresh restores persisted SQLite data.
+The complete two-browser journey is an explicit manual acceptance check: one browser submits feedback, the other receives it live, rating filters remain correct, and a refresh restores persisted SQLite data.
 
 ## Known limitations and production evolution
 
@@ -346,6 +496,6 @@ The end-to-end path proves that one browser can submit feedback, another receive
 - Add separate imported, occurred, or updated timestamps if the product later needs lifecycle semantics beyond server submission time.
 - Replace SQLite when deployment, multiple writers, or higher concurrency becomes material.
 - Replace in-memory publish/subscribe when multiple backend replicas are introduced.
+- For a production deployment requiring seamless continuity across temporary disconnects, refetch the newest persisted page after reconnection and merge by ID.
 - Consider Kysely or Drizzle if database scale makes stronger generated query typing worthwhile.
-- Expand browser coverage beyond Chromium for a production support matrix.
 - Add event administration only if event lifecycle management enters product scope.
