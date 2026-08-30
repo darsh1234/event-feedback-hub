@@ -135,6 +135,33 @@ describe('EventFeedbackExperience', () => {
     ).not.toBeInTheDocument()
   })
 
+  it('automatically reveals buffered feedback after scrolling back to the top', async () => {
+    const persisted = feedback('F-persisted', 'Persisted response')
+    const live = feedback('F-live', 'Automatically revealed response')
+    renderExperience([
+      feedbackQueryMock([persisted]),
+      subscriptionMock(live, 100),
+    ])
+
+    await screen.findByText(persisted.text)
+    const scrollRegion = screen.getByRole('region', {
+      name: 'Feedback responses',
+    })
+    fireEvent.scroll(scrollRegion, { target: { scrollTop: 120 } })
+
+    expect(
+      await screen.findByRole('button', { name: '1 new response' }),
+    ).toBeInTheDocument()
+    expect(screen.queryByText(live.text)).not.toBeInTheDocument()
+
+    fireEvent.scroll(scrollRegion, { target: { scrollTop: 0 } })
+
+    expect(await screen.findByText(live.text)).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: '1 new response' }),
+    ).not.toBeInTheDocument()
+  })
+
   it('keeps live feedback outside a non-matching rating view', async () => {
     const persisted = feedback('F-persisted', 'Persisted response', 4)
     const threeStarLive = feedback('F-live', 'Three-star live response', 3)

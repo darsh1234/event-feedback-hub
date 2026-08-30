@@ -1,6 +1,6 @@
 import { NetworkStatus } from '@apollo/client'
 import { useQuery } from '@apollo/client/react'
-import { useEffect, useRef, useState } from 'react'
+import { type UIEvent, useEffect, useRef, useState } from 'react'
 
 import { feedbackPageSize } from '../apollo/feedbackCache'
 import { FeedbackDocument } from '../graphql/generated/graphql'
@@ -84,7 +84,7 @@ function FeedbackRating({ rating }: { rating: number }) {
 
 /**
  * Renders one event/rating feedback list with cursor pagination, empty states,
- * relative timestamps, and a controlled live-response reveal action.
+ * relative timestamps, and controlled or automatic live-response reveal.
  */
 export function FeedbackStream({
   bufferedFeedbackCount,
@@ -168,6 +168,17 @@ export function FeedbackStream({
     onAtTopChange(true)
   }
 
+  /** Reveals pending responses as soon as the reader returns to the stream top. */
+  function handleScroll(event: UIEvent<HTMLDivElement>) {
+    const isAtTop = event.currentTarget.scrollTop <= 8
+
+    onAtTopChange(isAtTop)
+
+    if (isAtTop && bufferedFeedbackCount > 0) {
+      revealBufferedFeedback()
+    }
+  }
+
   const isInitialLoading = loading && data === undefined
   const isLoadingOlder = networkStatus === NetworkStatus.fetchMore
 
@@ -195,7 +206,7 @@ export function FeedbackStream({
       <div
         aria-label="Feedback responses"
         className="feedback-scroll-region"
-        onScroll={(event) => onAtTopChange(event.currentTarget.scrollTop <= 8)}
+        onScroll={handleScroll}
         ref={scrollRegionRef}
         role="region"
         tabIndex={0}
