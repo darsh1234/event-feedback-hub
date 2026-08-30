@@ -1,6 +1,6 @@
 import type { GraphQLResolveInfo } from 'graphql'
-import type { EventRecord } from '../../repositories/eventRepository.js'
-import type { FeedbackRecord } from '../../repositories/feedbackRepository.js'
+import type { EventRecord } from '../../features/events/eventTypes.js'
+import type { FeedbackRecord } from '../../features/feedback/feedbackTypes.js'
 import type { GraphQLContext } from '../context.js'
 export type Maybe<T> = T | null
 export type InputMaybe<T> = Maybe<T>

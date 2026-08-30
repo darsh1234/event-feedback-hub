@@ -7,15 +7,13 @@ import {
   openDatabase,
 } from '../database/connection.js'
 import { initializeDatabase } from '../database/initialize.js'
-import type {
-  FeedbackRecord,
-  FeedbackRepository,
-} from '../repositories/feedbackRepository.js'
+import type { FeedbackRepository } from '../features/feedback/feedbackRepository.js'
 import {
   createFeedbackPubSub,
   type FeedbackPubSub,
-} from '../services/feedbackPubSub.js'
-import { createFeedbackService } from '../services/feedbackService.js'
+} from '../features/feedback/feedbackPubSub.js'
+import { createFeedbackService } from '../features/feedback/feedbackService.js'
+import type { FeedbackRecord } from '../features/feedback/feedbackTypes.js'
 import { type GraphQLContext, createGraphQLContext } from './context.js'
 import { createGraphQLServer } from './server.js'
 

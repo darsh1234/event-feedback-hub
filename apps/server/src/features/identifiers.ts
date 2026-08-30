@@ -10,7 +10,7 @@ function isPrefixedUlid(value: string, prefix: 'E' | 'F'): boolean {
   return value.startsWith(`${prefix}-`) && isValid(value.slice(2))
 }
 
-/** Generates an event ID whose prefix makes its domain visible in logs. */
+/** Generates an event ID whose prefix makes its feature visible in logs. */
 export function createEventId(seedTime?: number): string {
   return createId('E', seedTime)
 }

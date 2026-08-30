@@ -1,9 +1,5 @@
-import type { DatabaseConnection } from '../database/connection.js'
-
-export interface EventRecord {
-  id: string
-  name: string
-}
+import type { DatabaseConnection } from '../../database/connection.js'
+import type { EventRecord } from './eventTypes.js'
 
 /** Persistence contract for the predefined, read-only event catalog. */
 export interface EventRepository {

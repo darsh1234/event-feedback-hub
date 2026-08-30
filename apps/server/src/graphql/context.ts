@@ -2,13 +2,13 @@ import type { DatabaseConnection } from '../database/connection.js'
 import {
   createEventRepository,
   type EventRepository,
-} from '../repositories/eventRepository.js'
-import { createFeedbackRepository } from '../repositories/feedbackRepository.js'
-import type { FeedbackPubSub } from '../services/feedbackPubSub.js'
+} from '../features/events/eventRepository.js'
+import { createFeedbackRepository } from '../features/feedback/feedbackRepository.js'
+import type { FeedbackPubSub } from '../features/feedback/feedbackPubSub.js'
 import {
   createFeedbackService,
   type FeedbackService,
-} from '../services/feedbackService.js'
+} from '../features/feedback/feedbackService.js'
 
 /** Dependencies exposed to every GraphQL resolver operation. */
 export interface GraphQLContext {
@@ -22,7 +22,7 @@ interface GraphQLContextOptions {
 }
 
 /**
- * Composes repositories and domain services once for use by HTTP requests and
+ * Composes feature repositories and services once for use by HTTP requests and
  * WebSocket subscription operations.
  */
 export function createGraphQLContext(

@@ -6,7 +6,7 @@ import {
   openDatabase,
 } from '../database/connection.js'
 import { initializeDatabase } from '../database/initialize.js'
-import { encodeFeedbackCursor } from '../domain/feedbackCursor.js'
+import { encodeFeedbackCursor } from '../features/feedback/feedbackCursor.js'
 import { type GraphQLContext, createGraphQLContext } from './context.js'
 import { createGraphQLServer } from './server.js'
 

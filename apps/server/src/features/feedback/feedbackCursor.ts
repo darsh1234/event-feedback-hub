@@ -1,4 +1,4 @@
-import { isFeedbackId } from './ids.js'
+import { isFeedbackId } from '../identifiers.js'
 
 /** Identifies malformed or noncanonical feedback pagination cursors. */
 export class InvalidFeedbackCursorError extends Error {

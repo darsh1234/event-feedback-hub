@@ -5,7 +5,11 @@ import { join } from 'node:path'
 import { decodeTime } from 'ulid'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
-import { createFeedbackId, isEventId, isFeedbackId } from '../domain/ids.js'
+import {
+  createFeedbackId,
+  isEventId,
+  isFeedbackId,
+} from '../features/identifiers.js'
 import { type DatabaseConnection, openDatabase } from './connection.js'
 import { initializeDatabase, resetDatabaseFile } from './initialize.js'
 

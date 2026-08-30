@@ -10,7 +10,7 @@ import { createGraphQLContext } from './graphql/context.js'
 import {
   createFeedbackPubSub,
   type FeedbackPubSub,
-} from './services/feedbackPubSub.js'
+} from './features/feedback/feedbackPubSub.js'
 
 const workshopId = 'E-01JGFJJZ000JX0K3SAK84YSW4T'
 const webinarId = 'E-01JGFJJZZ832B8E8AQ4P779QN7'

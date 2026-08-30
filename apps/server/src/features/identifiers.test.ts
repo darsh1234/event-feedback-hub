@@ -5,7 +5,7 @@ import {
   createFeedbackId,
   isEventId,
   isFeedbackId,
-} from './ids.js'
+} from './identifiers.js'
 
 describe('prefixed ULIDs', () => {
   it('creates valid type-specific identifiers', () => {

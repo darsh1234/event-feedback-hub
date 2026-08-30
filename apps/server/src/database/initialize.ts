@@ -4,8 +4,8 @@ import { dirname, resolve } from 'node:path'
 import type { DatabaseConnection } from './connection.js'
 import { openDatabase } from './connection.js'
 
-const schemaPath = resolve(import.meta.dirname, '../../database/schema.sql')
-const seedPath = resolve(import.meta.dirname, '../../database/seed.sql')
+const schemaPath = resolve(import.meta.dirname, '../../sql/schema.sql')
+const seedPath = resolve(import.meta.dirname, '../../sql/seed.sql')
 
 /** Default runtime location for the generated local database. */
 export const defaultDatabasePath = resolve(

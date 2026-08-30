@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import type { FeedbackRecord } from '../repositories/feedbackRepository.js'
+import type { FeedbackRecord } from './feedbackTypes.js'
 import { createFeedbackPubSub } from './feedbackPubSub.js'
 
 const workshopId = 'E-01JGFJJZ000JX0K3SAK84YSW4T'

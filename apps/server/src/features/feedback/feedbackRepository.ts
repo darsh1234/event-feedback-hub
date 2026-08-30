@@ -1,32 +1,10 @@
-import type { DatabaseConnection } from '../database/connection.js'
-
-export interface FeedbackRecord {
-  id: string
-  eventId: string
-  text: string
-  rating: number
-  createdAt: string
-}
-
-export interface CreateFeedbackRecord {
-  id: string
-  eventId: string
-  text: string
-  rating: number
-  createdAt: string
-}
-
-export interface ListFeedbackRecordsInput {
-  eventId: string
-  rating?: number
-  first: number
-  afterId?: string
-}
-
-export interface FeedbackRecordPage {
-  items: FeedbackRecord[]
-  hasNextPage: boolean
-}
+import type { DatabaseConnection } from '../../database/connection.js'
+import type {
+  CreateFeedbackRecord,
+  FeedbackRecord,
+  FeedbackRecordPage,
+  ListFeedbackRecordsInput,
+} from './feedbackTypes.js'
 
 /** Persistence contract for appending and paging feedback records. */
 export interface FeedbackRepository {

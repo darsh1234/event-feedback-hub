@@ -2,14 +2,12 @@ import {
   decodeFeedbackCursor,
   encodeFeedbackCursor,
   InvalidFeedbackCursorError,
-} from '../domain/feedbackCursor.js'
-import { createFeedbackId, isEventId } from '../domain/ids.js'
-import type { EventRepository } from '../repositories/eventRepository.js'
-import type {
-  FeedbackRecord,
-  FeedbackRepository,
-} from '../repositories/feedbackRepository.js'
+} from './feedbackCursor.js'
+import type { EventRepository } from '../events/eventRepository.js'
+import { createFeedbackId, isEventId } from '../identifiers.js'
+import type { FeedbackRepository } from './feedbackRepository.js'
 import { createFeedbackPubSub, type FeedbackPubSub } from './feedbackPubSub.js'
+import type { FeedbackRecord } from './feedbackTypes.js'
 
 /** Stable internal codes translated to the generated GraphQL enum. */
 export const feedbackSubmissionErrorCodes = {

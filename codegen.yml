@@ -8,8 +8,8 @@ generates:
     config:
       contextType: ../context.js#GraphQLContext
       mappers:
-        Event: ../../repositories/eventRepository.js#EventRecord
-        Feedback: ../../repositories/feedbackRepository.js#FeedbackRecord
+        Event: ../../features/events/eventTypes.js#EventRecord
+        Feedback: ../../features/feedback/feedbackTypes.js#FeedbackRecord
       useIndexSignature: true
       useTypeImports: true
   apps/web/src/graphql/generated/:

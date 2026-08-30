@@ -3,8 +3,8 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import {
   type DatabaseConnection,
   openDatabase,
-} from '../database/connection.js'
-import { initializeDatabase } from '../database/initialize.js'
+} from '../../database/connection.js'
+import { initializeDatabase } from '../../database/initialize.js'
 import {
   type EventRepository,
   createEventRepository,

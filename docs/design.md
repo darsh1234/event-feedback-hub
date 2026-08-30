@@ -98,6 +98,26 @@ event-feedback-hub/
 - The GraphQL schema is the API source of truth.
 - Generated operation and resolver types replace manually duplicated shared API interfaces.
 
+The server uses a feature-oriented hybrid structure:
+
+```text
+apps/server/
+├── sql/
+│   ├── schema.sql
+│   └── seed.sql
+└── src/
+    ├── app.ts
+    ├── index.ts
+    ├── database/
+    ├── features/
+    │   ├── identifiers.ts
+    │   ├── events/
+    │   └── feedback/
+    └── graphql/
+```
+
+Event and feedback models, persistence, services, pagination, and real-time behavior stay with the feature they implement. Their shared prefixed-ULID rules live once at the feature boundary in `identifiers.ts`. Shared SQLite connection and initialization code remains in `database`, while schema assembly and transport adapters remain in `graphql`. Static SQL lives in `sql` so it is not confused with executable TypeScript database code. This keeps related behavior together without introducing the additional ports, adapters, or schema-merging layers that a larger application might require.
+
 `npm run codegen` reads the local SDL and regenerates committed server resolver signatures without requiring a running API. Verification runs code generation before static checks. Generated files are formatted automatically and excluded from ESLint because they are tool-owned output rather than handwritten source.
 
 ## System flow diagrams
@@ -256,8 +276,8 @@ flowchart TD
 
 The repository commits:
 
-- `apps/server/database/schema.sql`;
-- `apps/server/database/seed.sql`; and
+- `apps/server/sql/schema.sql`;
+- `apps/server/sql/seed.sql`; and
 - a setup command that creates and seeds a local database.
 
 It does not commit SQLite database or sidecar files.

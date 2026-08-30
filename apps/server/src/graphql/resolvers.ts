@@ -4,11 +4,11 @@ import {
 } from './generated/resolver-types.js'
 import { GraphQLError } from 'graphql'
 
-import type { FeedbackRecord } from '../repositories/feedbackRepository.js'
+import type { FeedbackRecord } from '../features/feedback/feedbackTypes.js'
 import {
   FeedbackQueryValidationError,
   type FeedbackSubmissionErrorCode,
-} from '../services/feedbackService.js'
+} from '../features/feedback/feedbackService.js'
 
 const graphQLErrorCodes: Record<
   FeedbackSubmissionErrorCode,

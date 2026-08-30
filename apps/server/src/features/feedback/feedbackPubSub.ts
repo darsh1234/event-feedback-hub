@@ -1,4 +1,4 @@
-import type { FeedbackRecord } from '../repositories/feedbackRepository.js'
+import type { FeedbackRecord } from './feedbackTypes.js'
 
 /** Event-scoped real-time delivery contract used by the feedback service. */
 export interface FeedbackPubSub {
