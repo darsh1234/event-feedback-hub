@@ -72,7 +72,7 @@ Apollo Client directly supports the chosen queries, mutations, pagination, cache
 
 ESLint owns correctness-oriented static analysis and Prettier owns formatting. The repository intentionally avoids Husky and `lint-staged`; explicit root commands and CI provide the quality gate without installing hooks on a reviewer's machine.
 
-Accessibility is verified through semantic markup and React Testing Library assertions against the rendered interface. The JSX accessibility lint plugin is intentionally omitted because its current release does not support ESLint 10; retaining the current linter and testing actual component behavior is more defensible than forcing an outdated peer dependency.
+Accessibility is verified through semantic markup and React Testing Library assertions against the rendered interface. The JSX accessibility lint plugin available when the toolchain was selected did not support ESLint 10, so it was omitted rather than forcing an incompatible peer dependency.
 
 npm's install-script allowlist approves `esbuild`, whose platform binary is required by Vite, and `better-sqlite3`, whose native binding is required for SQLite access. The optional macOS `fsevents` script is explicitly denied; Vite can use its cross-platform file-watching fallback. This reduces unnecessary package-install execution while preserving reproducible frontend and database builds.
 
@@ -431,7 +431,7 @@ Validation exists at three layers:
 
 1. React provides immediate accessible feedback.
 2. The backend authoritatively validates event identity, trimmed text length from 1 through 1,000, and integer ratings from 1 through 5.
-3. SQLite foreign keys and checks protect persisted integrity if application validation is bypassed or defective.
+3. SQLite foreign keys and checks protect persisted event relationships, text bounds, rating range, and timestamp format. GraphQL and the backend service enforce the rating's integer semantics before persistence.
 
 Expected validation failures are not used to hide unexpected repository failures.
 

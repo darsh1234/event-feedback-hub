@@ -2,7 +2,7 @@
 
 A local TypeScript application for collecting anonymous event feedback and displaying new responses in real time.
 
-The repository is being developed as a sequence of focused, passing checkpoints. The current checkpoint merges event-scoped live feedback into the active stream while preserving rating filters and cursor pagination. The backend exposes validated submissions, filtered cursor pagination, and event-scoped live updates backed by SQLite.
+The repository records the application as a sequence of focused, passing checkpoints. The completed experience includes searchable event selection, anonymous validated submissions, rating filters, stable cursor pagination, event-scoped live updates, buffered-response handling, and a responsive interface backed by SQLite.
 
 ## Prerequisites
 
@@ -41,7 +41,7 @@ The web application uses Vite's default development port. The server exposes `GE
 
 The React application sends queries and mutations to `http://localhost:4000/graphql` and uses a lazy `graphql-ws` connection at `ws://localhost:4000/graphql` for event-scoped subscriptions. Its event selector is populated by the generated, typed `Events` operation rather than hardcoded client data. After an event is selected, the feedback form validates text and rating locally before using the typed `SubmitFeedback` mutation. Expected server validation errors remain beside the relevant field, input is preserved after failure, and the form clears only after a confirmed success. The persisted stream uses a typed feedback query with `cache-and-network`, keeps separate Apollo lists for each event and rating, and appends deduplicated older pages through the opaque server cursor. Matching live responses prepend immediately while the reader is at the top; otherwise they wait behind an **N new responses** control. Mutation and subscription results share an ID-based merge path, so the submitting browser sees one response while the oldest pagination cursor remains stable.
 
-The current GraphQL capability can be exercised at `http://localhost:4000/graphql` with:
+The GraphQL API can be exercised at `http://localhost:4000/graphql` with:
 
 ```graphql
 query Events {
