@@ -27,6 +27,15 @@ describe('application', () => {
     const selector = screen.getByRole('combobox', { name: 'Event' })
     await waitFor(() => expect(selector).toBeEnabled())
     expect(selector).toHaveAttribute('placeholder', 'Search events…')
+    expect(
+      screen.getByRole('region', { name: 'Feedback workspace' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', {
+        level: 2,
+        name: 'Choose an event to continue',
+      }),
+    ).toBeInTheDocument()
   })
 
   it('shows the submission form after an event is selected', async () => {
@@ -81,6 +90,22 @@ describe('application', () => {
     ).toBeInTheDocument()
     expect(screen.getByRole('combobox', { name: 'Event' })).toHaveValue(
       event.name,
+    )
+    expect(
+      screen.queryByRole('heading', {
+        level: 2,
+        name: 'Choose an event to continue',
+      }),
+    ).not.toBeInTheDocument()
+
+    const workspace = screen.getByRole('region', {
+      name: 'Feedback workspace',
+    })
+    expect(workspace).toContainElement(
+      screen.getByRole('heading', { level: 2, name: 'Choose an event' }),
+    )
+    expect(workspace).toContainElement(
+      screen.getByRole('heading', { level: 2, name: 'Add feedback' }),
     )
   })
 })

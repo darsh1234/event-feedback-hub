@@ -82,7 +82,10 @@ function subscriptionMock(
 function renderExperience(mocks: MockedResponse[]) {
   render(
     <MockedProvider cache={createApolloCache()} mocks={mocks}>
-      <EventFeedbackExperience eventId={eventId} />
+      <EventFeedbackExperience
+        eventId={eventId}
+        eventPanel={<section aria-label="Event selection" />}
+      />
     </MockedProvider>,
   )
 }

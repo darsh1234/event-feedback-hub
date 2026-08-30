@@ -14,6 +14,7 @@ This document records the intended architecture, the reasoning behind it, and th
 - One Node process serves the take-home application.
 - Users are anonymous; there are no accounts, authentication, profiles, or user records.
 - Events are predefined, seeded, and read-only.
+- The event selector searches the already-fetched predefined catalog locally.
 - Feedback is append-only; editing and deletion are outside scope.
 - Feedback displays its server-recorded submission time.
 
@@ -489,10 +490,15 @@ The client does not create optimistic feedback because authoritative IDs are ser
 
 ## User experience
 
-The page contains an event selector, feedback form, rating filter, feedback stream, and explicit **Load older feedback** control. Each feedback card renders `createdAt` as a human-readable relative time and retains the canonical UTC value in semantic time markup for accessibility and inspection. Relative labels are presentation derived and periodically refreshed from the immutable server value by the client; they do not alter cached data or trigger a database refetch.
+The responsive page keeps one stable feedback-workspace card visible before and after event selection. Its left column contains the searchable event combobox while the right column begins with a selection prompt and is replaced by the feedback form once an event is chosen. This avoids repositioning the selector or resizing the card during the primary transition. The columns stack inside that same shared card on narrow viewports, and the feedback stream is revealed beneath it without horizontal overflow. The visual theme uses centralized TrustLayer-inspired ink, blue, and mint CSS tokens rather than treating individual component colors as unrelated values.
+
+Clicking or focusing the event combobox opens its options and allows immediate typing. Search remains client-side because the complete predefined event catalog is already fetched and contains only three records; adding a paginated server contract would not improve this assessment workflow.
+
+The page also contains a rating filter and explicit **Load older feedback** control. Each feedback card renders `createdAt` as a human-readable relative time and retains the canonical UTC value in semantic time markup for accessibility and inspection. Relative labels are presentation derived and periodically refreshed from the immutable server value by the client; they do not alter cached data or trigger a database refetch.
 
 - At the top of the stream, matching live feedback appears immediately.
 - While reading older records, matching live feedback is buffered behind an **N new responses** banner.
+- Returning the feedback viewport to the top automatically reveals that buffer; the banner remains available for an earlier manual reveal.
 - Initial loading uses feedback skeletons when no cached data exists.
 - Event loading and failures disable progress until events can be retried.
 - Empty events invite the first response; empty filters explain how to clear the filter.
@@ -506,7 +512,7 @@ The page contains an event selector, feedback form, rating filter, feedback stre
 - Repository tests use isolated real SQLite databases created from production schema and seed files, including canonical timestamp constraints and fixture alignment between ULIDs and `created_at`.
 - GraphQL integration tests use the real schema, resolvers, repositories, validation, and Apollo Server `executeOperation`.
 - Server transport tests exercise GraphQL over real HTTP and `graphql-ws` connections against an isolated in-memory SQLite database.
-- React Testing Library verifies user-visible loading, form, filtering, pagination, buffering, and retry behavior.
+- React Testing Library verifies user-visible loading, searchable event selection, form behavior, filtering, pagination, manual and automatic buffered reveals, and retry behavior.
 
 The complete two-browser journey is an explicit manual acceptance check: one browser submits feedback, the other receives it live, rating filters remain correct, and a refresh restores persisted SQLite data.
 

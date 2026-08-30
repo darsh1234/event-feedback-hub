@@ -1,5 +1,5 @@
 import { useApolloClient, useSubscription } from '@apollo/client/react'
-import { useCallback, useState } from 'react'
+import { type ReactNode, useCallback, useState } from 'react'
 
 import {
   type FeedbackListItem,
@@ -10,13 +10,42 @@ import { FeedbackForm } from './FeedbackForm'
 import { FeedbackStream } from './FeedbackStream'
 
 interface EventFeedbackExperienceProps {
+  eventPanel: ReactNode
+  eventId: string | null
+}
+
+interface ActiveEventFeedbackExperienceProps {
+  eventPanel: ReactNode
   eventId: string
 }
 
-/** Coordinates submission, filtering, subscription delivery, and live buffering. */
-export function EventFeedbackExperience({
+/** Explains why the feedback controls are unavailable before event selection. */
+function WorkspacePrompt() {
+  return (
+    <section
+      aria-labelledby="workspace-prompt-heading"
+      className="workspace-prompt"
+    >
+      <div className="workspace-prompt-content">
+        <span aria-hidden="true" className="workspace-prompt-icon">
+          ✓
+        </span>
+        <p className="section-label">Next step</p>
+        <h2 id="workspace-prompt-heading">Choose an event to continue</h2>
+        <p>
+          Select a session to add anonymous feedback and see what other
+          attendees are saying.
+        </p>
+      </div>
+    </section>
+  )
+}
+
+/** Coordinates one event's submission, filtering, subscription, and buffering. */
+function ActiveEventFeedbackExperience({
+  eventPanel,
   eventId,
-}: EventFeedbackExperienceProps) {
+}: ActiveEventFeedbackExperienceProps) {
   const client = useApolloClient()
   const [rating, setRating] = useState<number | null>(null)
   const [isAtTop, setIsAtTop] = useState(true)
@@ -85,7 +114,10 @@ export function EventFeedbackExperience({
 
   return (
     <>
-      <FeedbackForm eventId={eventId} onSubmitted={receiveFeedback} />
+      <section aria-label="Feedback workspace" className="interaction-panel">
+        {eventPanel}
+        <FeedbackForm eventId={eventId} onSubmitted={receiveFeedback} />
+      </section>
       <FeedbackStream
         bufferedFeedbackCount={bufferedFeedback.length}
         eventId={eventId}
@@ -95,5 +127,28 @@ export function EventFeedbackExperience({
         rating={rating}
       />
     </>
+  )
+}
+
+/** Keeps the workspace geometry stable while activating event-specific state. */
+export function EventFeedbackExperience({
+  eventPanel,
+  eventId,
+}: EventFeedbackExperienceProps) {
+  if (eventId === null) {
+    return (
+      <section aria-label="Feedback workspace" className="interaction-panel">
+        {eventPanel}
+        <WorkspacePrompt />
+      </section>
+    )
+  }
+
+  return (
+    <ActiveEventFeedbackExperience
+      eventPanel={eventPanel}
+      eventId={eventId}
+      key={eventId}
+    />
   )
 }

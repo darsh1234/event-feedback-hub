@@ -1,4 +1,20 @@
 :root {
+  --tl-ink: #051424;
+  --tl-ink-muted: #465a70;
+  --tl-primary: #1c66dc;
+  --tl-primary-dark: #1553b7;
+  --tl-blue-soft: #eaf2ff;
+  --tl-mint: #41e6b2;
+  --tl-mint-dark: #126a53;
+  --tl-mint-soft: #e8fbf5;
+  --tl-surface: #ffffff;
+  --tl-background: #f4f7fb;
+  --tl-border: #d8e3ed;
+  --tl-border-strong: #aebdcc;
+  --tl-danger: #963737;
+  --tl-danger-soft: #fff1f1;
+  --tl-focus: rgb(65 230 178 / 55%);
+  --tl-shadow: 0 1.25rem 3.5rem rgb(5 20 36 / 9%);
   font-family:
     Inter,
     ui-sans-serif,
@@ -7,8 +23,8 @@
     BlinkMacSystemFont,
     'Segoe UI',
     sans-serif;
-  color: #172033;
-  background: #f4f7fb;
+  color: var(--tl-ink);
+  background: var(--tl-background);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -22,5 +38,17 @@
 body {
   min-width: 20rem;
   min-height: 100vh;
+  min-height: 100dvh;
   margin: 0;
+  overflow-x: hidden;
+  background:
+    radial-gradient(circle at 8% 0%, rgb(65 230 178 / 13%), transparent 26rem),
+    radial-gradient(circle at 92% 8%, rgb(28 102 220 / 10%), transparent 30rem),
+    var(--tl-background);
+}
+
+button,
+input,
+textarea {
+  font: inherit;
 }
