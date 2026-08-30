@@ -1,5 +1,5 @@
 import { MockedProvider } from '@apollo/client/testing/react'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 
@@ -24,10 +24,9 @@ describe('application', () => {
     expect(
       screen.getByRole('heading', { level: 1, name: 'Event Feedback Hub' }),
     ).toBeInTheDocument()
-    expect(
-      await screen.findByRole('option', { name: 'Select an event' }),
-    ).toBeInTheDocument()
-    expect(screen.getByRole('combobox', { name: 'Event' })).toBeEnabled()
+    const selector = screen.getByRole('combobox', { name: 'Event' })
+    await waitFor(() => expect(selector).toBeEnabled())
+    expect(selector).toHaveAttribute('placeholder', 'Search events…')
   })
 
   it('shows the submission form after an event is selected', async () => {
@@ -72,14 +71,16 @@ describe('application', () => {
       screen.queryByRole('heading', { level: 2, name: 'Add feedback' }),
     ).not.toBeInTheDocument()
 
-    await screen.findByRole('option', { name: event.name })
-    await user.selectOptions(
-      screen.getByRole('combobox', { name: 'Event' }),
-      event.id,
-    )
+    const selector = screen.getByRole('combobox', { name: 'Event' })
+    await waitFor(() => expect(selector).toBeEnabled())
+    await user.click(selector)
+    await user.click(screen.getByRole('option', { name: event.name }))
 
     expect(
       screen.getByRole('heading', { level: 2, name: 'Add feedback' }),
     ).toBeInTheDocument()
+    expect(screen.getByRole('combobox', { name: 'Event' })).toHaveValue(
+      event.name,
+    )
   })
 })
